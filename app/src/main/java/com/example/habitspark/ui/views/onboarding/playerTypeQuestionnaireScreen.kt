@@ -27,15 +27,27 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import android.util.Log
+import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.platform.LocalContext
+
+
+data class PlayerTypeResult(
+    val primaryType: String,
+    val secondaryType: String
+)
 
 
 @Composable
-fun playerTypeQuestionnaireScreen() {
+fun playerTypeQuestionnaireScreen(
+    onBoadingStep: Int = 2,
+    toalOnBoadingSteps: Int = 3,
+    onNext: (PlayerTypeResult) -> Unit
+) {
     val allQuestions = remember {
         questionData.entries.flatMap { (type, questions) ->
             questions.map { question -> QuestionItem(type, question) }
@@ -43,72 +55,93 @@ fun playerTypeQuestionnaireScreen() {
     }
 
     var currentIndex by remember { mutableStateOf(0) }
+    val answersByType = remember { mutableStateMapOf<String, MutableList<Int>>() }
+    val context = LocalContext.current
 
-    val answersByType = remember {
-        mutableStateMapOf<String, MutableList<Int>>()
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .align(Alignment.Center)
                 .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
+            Text(
+                text = "Demographic Questions ($onBoadingStep/$toalOnBoadingSteps)",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Player Type Questionnaire",
-                style = MaterialTheme.typography.titleMedium
+                text = "Questions ${currentIndex + 1}-${minOf(currentIndex + 3, allQuestions.size)} of ${allQuestions.size}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(bottom = 5.dp)
             )
 
-            Spacer(modifier = Modifier.weight(1f))
+            val currentQuestions = allQuestions.subList(
+                currentIndex,
+                minOf(currentIndex + 3, allQuestions.size)
+            )
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                val currentQuestions = allQuestions.subList(
-                    currentIndex,
-                    minOf(currentIndex + 3, allQuestions.size)
-                )
-
-                currentQuestions.forEach { item ->
-                    QuestionCard(
-                        item = item,
-                        onAnswerSelected = { type, score ->
-                            val list = answersByType.getOrPut(type) { mutableListOf() }
-                            list.add(score)
-                        }
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Button(
-                onClick = {
-                    if (currentIndex + 3 < allQuestions.size) {
-                        currentIndex += 3
-                    }else{
-                        Log.d("UserType", "Answers: $answersByType")
+            currentQuestions.forEach { item ->
+                QuestionCard(
+                    item = item,
+                    onAnswerSelected = { type, score ->
+                        val list = answersByType.getOrPut(type) { mutableListOf() }
+                        list.add(score)
                     }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp)
-            ) {
-                Text("Next")
+                )
             }
         }
 
+        Button(
+            onClick = {
+                if (currentIndex + 3 < allQuestions.size) {
+                    currentIndex += 3
+                } else {
+                    val typeAverages = answersByType.mapValues { entry ->
+                        val scores = entry.value
+                        if (scores.isNotEmpty()) scores.sum() / scores.size else 0
+                    }
+
+                    val sorted = typeAverages.entries.sortedByDescending { it.value }
+
+                    val primary = sorted.getOrNull(0)?.key
+                    val secondary = sorted.getOrNull(1)?.key
+
+                    if (primary != null && secondary != null) {
+                        onNext(PlayerTypeResult(primaryType = primary, secondaryType = secondary))
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Please complete the questionnaire to continue.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        currentIndex = 0
+                        answersByType.clear()
+                    }
+                }
+            },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondary,
+                contentColor = MaterialTheme.colorScheme.onSecondary
+            ),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text("Next")
+        }
     }
 }
 
-
-
-@Composable
+    @Composable
 fun QuestionCard(
     item: QuestionItem,
     onAnswerSelected: (String, Int) -> Unit
@@ -117,9 +150,10 @@ fun QuestionCard(
 
     Card(
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp) // Consistent card height
+            .height(180.dp)
             .padding(12.dp),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -132,23 +166,25 @@ fun QuestionCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f), // Flexible space
+                    .heightIn(min = 80.dp)
+                    .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = item.question,
                     fontSize = 18.sp,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
-            Spacer(modifier = Modifier.weight(1f)) // Pushes the buttons to the bottom
+            Spacer(modifier = Modifier.weight(1f))
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 4.dp), // Optional bottom margin
+                    .padding(bottom = 4.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 (1..7).forEach { num ->
@@ -166,21 +202,28 @@ fun QuestionCard(
     }
 }
 
-
 @Composable
 fun circleButton(number: Int, isSelected: Boolean, onClick: () -> Unit) {
+    val selectedColor = MaterialTheme.colorScheme.secondary
+    val unselectedColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.3f)
+
     Button(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) Color(0xFF4CAF50) else Color.LightGray,
+            containerColor = if (isSelected) selectedColor else unselectedColor
         ),
         shape = CircleShape,
         modifier = Modifier.size(40.dp),
         contentPadding = PaddingValues(0.dp)
     ) {
-        Text(text = number.toString(), color = Color.White, fontSize = 16.sp)
+        Text(
+            text = number.toString(),
+            color = MaterialTheme.colorScheme.onPrimary,
+            fontSize = 16.sp
+        )
     }
 }
+
 
 
 
