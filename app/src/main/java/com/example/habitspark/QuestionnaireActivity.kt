@@ -13,6 +13,7 @@ import com.example.habitspark.ui.views.onboarding.DemographicData
 import com.example.habitspark.ui.views.onboarding.PlayerTypeResult
 
 import com.example.habitspark.ui.views.onboarding.demographicQuestionnaireScreen
+import com.example.habitspark.ui.views.onboarding.introScreen
 import com.example.habitspark.ui.views.onboarding.playerTypeQuestionnaireScreen
 
 
@@ -28,7 +29,12 @@ class QuestionnaireActivity : ComponentActivity() {
                 var playerTypeData by remember { mutableStateOf<PlayerTypeResult?>(null) }
 
                 when (onboardingStep) {
-                    1 -> demographicQuestionnaireScreen(
+                    1 -> introScreen(
+                        onNext = {
+                            onboardingStep++
+                        }
+                    )
+                    2 -> demographicQuestionnaireScreen(
                         onBoadingStep = onboardingStep,
                         toalOnBoadingSteps = 3,
                         onNext = {
@@ -37,7 +43,7 @@ class QuestionnaireActivity : ComponentActivity() {
                         }
                     )
 
-                    2 -> playerTypeQuestionnaireScreen(
+                    3 -> playerTypeQuestionnaireScreen(
                         onBoadingStep = onboardingStep,
                         toalOnBoadingSteps = 3,
                         onNext = {
