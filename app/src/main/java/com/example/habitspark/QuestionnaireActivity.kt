@@ -8,6 +8,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.example.habitspark.data.models.User
+import com.example.habitspark.data.repository.UserRepository
 import com.example.habitspark.ui.theme.HabitSparkTheme
 import com.example.habitspark.ui.views.onboarding.DemographicData
 import com.example.habitspark.ui.views.onboarding.PlayerTypeResult
@@ -15,9 +17,12 @@ import com.example.habitspark.ui.views.onboarding.PlayerTypeResult
 import com.example.habitspark.ui.views.onboarding.demographicQuestionnaireScreen
 import com.example.habitspark.ui.views.onboarding.introScreen
 import com.example.habitspark.ui.views.onboarding.playerTypeQuestionnaireScreen
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 
 
 class QuestionnaireActivity : ComponentActivity() {
+    val db = Firebase.firestore
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -51,6 +56,26 @@ class QuestionnaireActivity : ComponentActivity() {
                             onboardingStep++
                         }
                     )
+
+                    4 -> {
+                        val user = User(
+                            username = demographicData?.userName.orEmpty(),
+                            age = demographicData?.age?.toIntOrNull() ?: 0,
+                            gender = demographicData?.gender.orEmpty(),
+                            country = demographicData?.country.orEmpty(),
+                            primaryType = playerTypeData?.primaryType.orEmpty(),
+                            secondaryType = playerTypeData?.secondaryType.orEmpty(),
+                        )
+
+                        UserRepository.addUser(user)
+                            .addOnSuccessListener { documentReference ->
+                                Log.d("Firestore", "DocumentSnapshot added with ID: ${documentReference.id}")
+                            }
+                            .addOnFailureListener { e ->
+                                Log.w("Firestore", "Error adding document", e)
+                            }
+
+                    }
                 }
             }
         }

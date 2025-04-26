@@ -70,7 +70,7 @@ fun playerTypeQuestionnaireScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Demographic Questions ($onBoadingStep/$toalOnBoadingSteps)",
+                text = "Determining Player Type ($onBoadingStep/$toalOnBoadingSteps)",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onBackground
             )
