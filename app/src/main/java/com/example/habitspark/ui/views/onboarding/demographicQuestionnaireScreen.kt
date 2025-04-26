@@ -45,6 +45,7 @@ data class DemographicQuestion(
 )
 
 data class DemographicData(
+    val userName: String,
     val age: String,
     val gender: String,
     val country: String,
@@ -52,6 +53,7 @@ data class DemographicData(
     companion object {
         fun fromMap(map: Map<String, String>): DemographicData {
             return DemographicData(
+                userName = map["userName"].orEmpty(),
                 age = map["age"].orEmpty(),
                 gender = map["gender"].orEmpty(),
                 country = map["country"].orEmpty(),
@@ -69,6 +71,7 @@ fun demographicQuestionnaireScreen(
     onNext: (DemographicData) -> Unit
 ) {
     val questions = listOf(
+        DemographicQuestion("userName", "What is your name?", InputType.TEXT),
         DemographicQuestion("age", "What is your age?", InputType.TEXT),
         DemographicQuestion("gender", "What is your gender?", InputType.SELECT, listOf("Male", "Female", "Other")),
         DemographicQuestion("country", "What country are you from?", InputType.TEXT),
