@@ -1,6 +1,6 @@
 package com.example.habitspark.data.models
 
-data class User(
+data class UserModel(
     val username: String = "",
     val age: Int = 0,
     val email: String = "",
