@@ -63,7 +63,7 @@ class QuestionnaireActivity : ComponentActivity() {
 
                     4 -> {
                         val user = UserModel(
-                            username = demographicData?.userName.orEmpty(),
+                            name = demographicData?.userName.orEmpty(),
                             age = demographicData?.age?.toIntOrNull() ?: 0,
                             gender = demographicData?.gender.orEmpty(),
                             country = demographicData?.country.orEmpty(),
