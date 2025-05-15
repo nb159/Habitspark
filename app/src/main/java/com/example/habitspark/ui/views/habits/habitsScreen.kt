@@ -1,5 +1,6 @@
 package com.example.habitspark.ui.views.habits
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,6 +30,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,20 +52,27 @@ import com.example.habitspark.ui.theme.PrimaryAccent
 import com.example.habitspark.ui.theme.PrimaryText
 import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.theme.SurfaceColor
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.habitspark.ui.views.habits.habitDetailsScreen
 
 @Composable
 fun habitsScreen(
-    user: UserModel, // Pass user data
-    habits: List<HabitModel>, // Pass list of habits
-    onAddHabitClicked: () -> Unit,
-    onQuickAddEntryClicked: (HabitModel) -> Unit
+    user: UserModel,
+    onHabitClick: (habitId: String) -> Unit = {},
 ) {
-    Log.d("HabitsScreen", "User: $user")
+    val viewModel: HabitViewModel = viewModel()
+    val habits = viewModel.habits
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchHabits(user.id)
+    }
+
+    var showDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
-                onClick = onAddHabitClicked,
+                onClick = { showDialog = true },
                 containerColor = PrimaryAccent,
                 contentColor = PrimaryText
             ) {
@@ -71,15 +87,24 @@ fun habitsScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            userHeader(userModel = user, totalHabitHours = habits.sumOf { it.totalHours })
+            userHeader(userModel = user, totalHabitHours = habits?.sumOf { it.totalHours })
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            habitList(habits = habits, onQuickAddEntryClicked = onQuickAddEntryClicked)
+            habitList(habits = habits, onHabitClick)
+            if (showDialog) {
+                addHabitDialog(
+                    userId = user.id,
+                    onDismiss = { showDialog = false },
+                    onSave = { habit -> viewModel.addHabit(habit) }
+                )
+            }
         }
+
     }
 }
 
+@SuppressLint("UnrememberedMutableState")
 @Preview(showBackground = true)
 @Composable
 fun habitsScreenPreview() {
@@ -99,48 +124,17 @@ fun habitsScreenPreview() {
         metrics = Metrics(totalHabitsTracked = 5, totalEntriesLogged = 40, streakDays = 10)
     )
 
-    val dummyHabits = listOf(
-        HabitModel(
-            name = "Morning Meditation",
-            description = "Relax and focus",
-            goalType = "hours",
-            goalTarget = 10,
-            totalEntries = 15,
-            totalHours = 12.5,
-            currentStreak = 5,
-            highestStreak = 8,
-            averageSessionMinutes = 25.0,
-            difficultyRatingAverage = 3.5f,
-            entryMoodAverage = 4.2f
-        ),
-        HabitModel(
-            name = "Workout",
-            description = "Strength training",
-            goalType = "count",
-            goalTarget = 5,
-            totalEntries = 20,
-            totalHours = 18.0,
-            currentStreak = 10,
-            highestStreak = 12,
-            averageSessionMinutes = 45.0,
-            difficultyRatingAverage = 4.0f,
-            entryMoodAverage = 3.8f
-        )
-    )
-
     habitsScreen(
         user = dummyUser,
-        habits = dummyHabits,
-        onAddHabitClicked = {},
-        onQuickAddEntryClicked = {}
     )
 }
 
 @Composable
 fun userHeader(
     userModel: UserModel,
-    totalHabitHours: Double
+    totalHabitHours: Double?
 ) {
+    Log.d("HabitScreen", "hours: ${totalHabitHours}")
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -239,26 +233,33 @@ fun userHeader(
     }
 }
 
-
-
 @Composable
 fun habitList(
-    habits: List<HabitModel>,
-    onQuickAddEntryClicked: (HabitModel) -> Unit
+    habits: SnapshotStateList<HabitModel>,
+    onHabitClick: (habitId: String) -> Unit = {}
 ) {
+    if (habits.isEmpty()) {
+        Text(
+            text = "No habits found. Start tracking your progress!",
+            color = SecondaryText,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        return
+    }
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(habits) { habit ->
-            habitItem(habit = habit, onQuickAddEntryClicked = { onQuickAddEntryClicked(habit) })
+            habitItem(habit = habit, onHabitClick)
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun habitItem(
     habit: HabitModel,
-    onQuickAddEntryClicked: () -> Unit
+    onHabitClick: (habitId: String) -> Unit = {}
 ) {
     Card(
         modifier = Modifier
@@ -266,7 +267,8 @@ fun habitItem(
             .height(80.dp),
         colors = CardDefaults.cardColors(containerColor = SurfaceColor),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
+        elevation = CardDefaults.cardElevation(4.dp),
+        onClick = { onHabitClick(habit.id) },
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -302,7 +304,7 @@ fun habitItem(
                 )
             }
 
-            IconButton(onClick = onQuickAddEntryClicked) {
+            IconButton(onClick = { Log.d("HabitItem", "Clicked on ${habit.name}")}) {
                 Icon(
                     imageVector = Icons.Default.AddCircle,
                     contentDescription = "Quick Add",
