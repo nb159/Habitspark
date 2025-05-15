@@ -8,10 +8,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.habitspark.data.models.HabitModel
 import com.example.habitspark.data.repository.HabitRepository
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-class HabitViewModel() : ViewModel() {
+class HabitViewModel(
+    private val habitRepository: HabitRepository = HabitRepository(Firebase.firestore),
+) : ViewModel() {
 
     private val _habits = mutableStateListOf<HabitModel>()
     val habits: SnapshotStateList<HabitModel> = _habits
@@ -22,7 +26,7 @@ class HabitViewModel() : ViewModel() {
     fun fetchHabits(userId: String) {
         viewModelScope.launch {
             try {
-                val result = HabitRepository.getUserHabits(userId).await()
+                val result = habitRepository.getUserHabits(userId).await()
                 val list = result.documents.mapNotNull {
                     it.toObject(HabitModel::class.java)?.copy(id = it.id)
                 }
@@ -37,7 +41,7 @@ class HabitViewModel() : ViewModel() {
     fun addHabit(habit: HabitModel) {
         viewModelScope.launch {
             try {
-                HabitRepository.addHabit(habit)
+                habitRepository.addHabit(habit)
                 _habits.add(habit.copy(id = habit.id))
             } catch (e: Exception) {
                 _error.value = e.message
@@ -48,7 +52,7 @@ class HabitViewModel() : ViewModel() {
     fun deleteHabit(habitId: String) {
         viewModelScope.launch {
             try {
-                HabitRepository.deleteHabit(habitId)
+                habitRepository.deleteHabit(habitId)
                 _habits.removeIf { it.id == habitId }
             } catch (e: Exception) {
                 _error.value = e.message
@@ -59,7 +63,7 @@ class HabitViewModel() : ViewModel() {
     fun updateHabit(updatedHabit: HabitModel) {
         viewModelScope.launch {
             try {
-                HabitRepository.updateHabit(updatedHabit)
+                habitRepository.updateHabit(updatedHabit)
                 val index = _habits.indexOfFirst { it.id == updatedHabit.id }
                 if (index != -1) _habits[index] = updatedHabit
             } catch (e: Exception) {

@@ -5,12 +5,10 @@ import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.toObject
 
-object EntryRepository {
+class EntryRepository(db: FirebaseFirestore) {
 
-    private val db = FirebaseFirestore.getInstance()
     private val entriesCollection = db.collection("entries")
 
     fun addEntry(entry: EntryModel): Task<DocumentReference> {

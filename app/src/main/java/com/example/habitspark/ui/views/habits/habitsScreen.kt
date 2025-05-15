@@ -32,7 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.habitspark.R
 import com.example.habitspark.data.models.HabitModel
 import com.example.habitspark.data.models.Metrics
@@ -52,19 +52,17 @@ import com.example.habitspark.ui.theme.PrimaryAccent
 import com.example.habitspark.ui.theme.PrimaryText
 import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.theme.SurfaceColor
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.habitspark.ui.views.habits.habitDetailsScreen
 
 @Composable
 fun habitsScreen(
     user: UserModel,
     onHabitClick: (habitId: String) -> Unit = {},
 ) {
-    val viewModel: HabitViewModel = viewModel()
-    val habits = viewModel.habits
+    val habitViewModel: HabitViewModel = viewModel()
+    val habits = habitViewModel.habits
 
     LaunchedEffect(Unit) {
-        viewModel.fetchHabits(user.id)
+        habitViewModel.fetchHabits(user.id)
     }
 
     var showDialog by remember { mutableStateOf(false) }
@@ -96,7 +94,7 @@ fun habitsScreen(
                 addHabitDialog(
                     userId = user.id,
                     onDismiss = { showDialog = false },
-                    onSave = { habit -> viewModel.addHabit(habit) }
+                    onSave = { habit -> habitViewModel.addHabit(habit) }
                 )
             }
         }

@@ -21,6 +21,8 @@ import com.example.habitspark.ui.views.onboarding.PlayerTypeResult
 import com.example.habitspark.ui.views.onboarding.demographicQuestionnaireScreen
 import com.example.habitspark.ui.views.onboarding.introScreen
 import com.example.habitspark.ui.views.onboarding.playerTypeQuestionnaireScreen
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.launch
 
 
@@ -71,14 +73,15 @@ class QuestionnaireActivity : ComponentActivity() {
                             secondaryType = playerTypeData?.secondaryType.orEmpty(),
                         )
 
-                        UserRepository.addUser(user)
+                        val userRepository = UserRepository(Firebase.firestore)
+                        userRepository.addUser(user)
                             .addOnSuccessListener { documentReference ->
                                 lifecycleScope.launch {
                                     UserPreferencesManager.saveUserId(
                                         context = this@QuestionnaireActivity,
                                         userId = documentReference.id
                                     )
-                                    var intent = Intent(this@QuestionnaireActivity, MainActivity::class.java)
+                                    val intent = Intent(this@QuestionnaireActivity, MainActivity::class.java)
                                     startActivity(intent)
 
                                 }

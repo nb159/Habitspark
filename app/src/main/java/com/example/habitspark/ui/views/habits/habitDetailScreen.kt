@@ -19,30 +19,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.habitspark.data.models.HabitModel
-import com.example.habitspark.data.repository.HabitRepository
-import com.example.habitspark.ui.theme.BackgroundColor
-import com.google.android.gms.tasks.Task
-import com.google.firebase.firestore.DocumentSnapshot
-import kotlinx.coroutines.tasks.await
 
 @Composable
 fun habitDetailsScreen(
     habitId: String,
 ) {
-    val viewModel: EntryViewModel = viewModel()
-    val entries by viewModel.entries.collectAsState()
-    var habit by remember { mutableStateOf<HabitModel?>(null) }
+    val entryViewModel: EntryViewModel = viewModel()
+    val entries by entryViewModel.entries.collectAsState()
+    val habit by entryViewModel.habit
 
     LaunchedEffect(habitId) {
-        viewModel.fetchEntriesForHabit(habitId)
-        habit = HabitRepository.getHabit(habitId).await()
+        entryViewModel.fetchEntriesForHabit(habitId)
+        entryViewModel.fetchHabit(habitId)
     }
 
     Scaffold(

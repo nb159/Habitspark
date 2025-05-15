@@ -7,25 +7,15 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.habitspark.data.models.HabitModel
-import com.example.habitspark.data.models.UserModel
-import com.example.habitspark.data.repository.HabitRepository
-import com.example.habitspark.data.repository.UserPreferencesManager
-import com.example.habitspark.data.repository.UserRepository
 import com.example.habitspark.ui.theme.HabitSparkTheme
-import com.example.habitspark.ui.views.habits.habitDetailsScreen
 import com.example.habitspark.ui.views.habits.habitsScreen
-import kotlinx.coroutines.flow.first
+import com.example.habitspark.ui.views.habits.habitDetailsScreen
+import com.example.habitspark.ui.views.user.UserViewModel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 class MainActivity : ComponentActivity() {
 
@@ -33,7 +23,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            var user by remember { mutableStateOf<UserModel?>(null) }
+            val userViewModel = UserViewModel()
+            val user by userViewModel.user
             lifecycleScope.launch {
                 try {
                     val userId = "TMMFEXhbgy5hYFIMtASi"
@@ -41,14 +32,7 @@ class MainActivity : ComponentActivity() {
 
                     if (userId != null) {
                         Log.d("MainActivity", "userId: ${userId}")
-                        val userDocument = UserRepository.getUser(userId).await()
-                        Log.d("MainActivity", "userDocument: ${userDocument}")
-                        if (userDocument.exists()) {
-                            user = userDocument.toObject(UserModel::class.java)?.copy(id = userDocument.id)
-                        } else {
-                            // User document not found (maybe deleted)
-                            startActivity(Intent(this@MainActivity, QuestionnaireActivity::class.java))
-                        }
+                        userViewModel.fetchUser(userId)
                     } else {
                         // No user ID saved (first launch probably)
                         startActivity(Intent(this@MainActivity, QuestionnaireActivity::class.java))

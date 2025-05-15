@@ -1,15 +1,27 @@
 package com.example.habitspark.ui.views.habits
 
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.example.habitspark.data.models.EntryModel
+import com.example.habitspark.data.models.HabitModel
 import com.example.habitspark.data.repository.EntryRepository
+import com.example.habitspark.data.repository.HabitRepository
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class EntryViewModel : ViewModel() {
+class EntryViewModel(
+    private val entryRepository: EntryRepository = EntryRepository(Firebase.firestore),
+    private val habitRepository: HabitRepository = HabitRepository(Firebase.firestore),
+) : ViewModel() {
 
     private val _entries = MutableStateFlow<List<EntryModel>>(emptyList())
     val entries: StateFlow<List<EntryModel>> = _entries
+
+    private val _habit = mutableStateOf<HabitModel?>(null)
+    val habit: State<HabitModel?> = _habit
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
@@ -19,7 +31,7 @@ class EntryViewModel : ViewModel() {
 
     fun fetchEntriesForHabit(habitId: String) {
         _isLoading.value = true
-        EntryRepository.getEntriesForHabit(habitId)
+        entryRepository.getEntriesForHabit(habitId)
             .addOnSuccessListener { result ->
                 _entries.value = result
                 _isLoading.value = false
@@ -30,8 +42,18 @@ class EntryViewModel : ViewModel() {
             }
     }
 
+    fun fetchHabit(habitId: String) {
+        habitRepository.getHabit(habitId)
+            .addOnSuccessListener { result ->
+                _habit.value = result
+            }
+            .addOnFailureListener { exception ->
+                _error.value = exception.localizedMessage
+            }
+    }
+
     fun addEntry(entry: EntryModel) {
-        EntryRepository.addEntry(entry)
+        entryRepository.addEntry(entry)
             .addOnSuccessListener {
                 fetchEntriesForHabit(entry.habitId)
             }
@@ -41,7 +63,7 @@ class EntryViewModel : ViewModel() {
     }
 
     fun deleteEntry(entryId: String, habitId: String) {
-        EntryRepository.deleteEntry(entryId)
+        entryRepository.deleteEntry(entryId)
             .addOnSuccessListener {
                 fetchEntriesForHabit(habitId)
             }

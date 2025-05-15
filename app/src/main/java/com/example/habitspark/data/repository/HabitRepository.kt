@@ -2,16 +2,13 @@ package com.example.habitspark.data.repository
 
 import com.example.habitspark.data.models.HabitModel
 import com.google.android.gms.tasks.Task
-import com.google.firebase.Firebase
 import com.google.firebase.firestore.DocumentReference
-import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
-import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.toObject
 
-object HabitRepository {
+class  HabitRepository(db: FirebaseFirestore) {
 
-    private val db = Firebase.firestore
     private val habitsCollection = db.collection("habits")
 
     fun addHabit(habit: HabitModel): Task<DocumentReference> {
