@@ -34,7 +34,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
 enum class InputType {
-    TEXT, SELECT, BOOLEAN
+    TEXT, SELECT, BOOLEAN, NUMBER
 }
 
 data class DemographicQuestion(
@@ -171,6 +171,9 @@ fun demographicQuestionnaireScreen(
                                     }
                                 }
                             }
+
+                            else -> {}
+
                         }
                     }
                 }
