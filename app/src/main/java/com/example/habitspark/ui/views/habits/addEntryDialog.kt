@@ -65,7 +65,7 @@ fun addEntryDialog(
     val answers = remember { mutableStateMapOf<String, String>() }
 
     var selectedMood by remember { mutableStateOf<Mood?>(null) }
-    var selectedDifficulty by remember { mutableStateOf<DifficultyLevel?>(null) }
+    var selectedDifficulty by remember { mutableStateOf<DifficultyLevel?>(DifficultyLevel.VERY_EASY) }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
 
     AlertDialog(
