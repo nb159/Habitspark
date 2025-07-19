@@ -7,7 +7,6 @@ data class EntryModel(
     val id: String = "",
     val userId: String = "",
     val habitId: String = "",
-    val name: String = "",
     val description: String = "",
     val minutesSpent: Int? = null,
     val moodValue: Int? = null,           // Stored as integer from Mood enum

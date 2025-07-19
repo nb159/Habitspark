@@ -1,8 +1,11 @@
 package com.example.habitspark.ui.views.habits
 
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.habitspark.data.models.EntryModel
 import com.example.habitspark.data.models.HabitModel
 import com.example.habitspark.data.repository.EntryRepository
@@ -11,14 +14,16 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class EntryViewModel(
     private val entryRepository: EntryRepository = EntryRepository(Firebase.firestore),
     private val habitRepository: HabitRepository = HabitRepository(Firebase.firestore),
 ) : ViewModel() {
 
-    private val _entries = MutableStateFlow<List<EntryModel>>(emptyList())
-    val entries: StateFlow<List<EntryModel>> = _entries
+    private val _entries = mutableStateListOf<EntryModel>()
+    val entries: SnapshotStateList<EntryModel> = _entries
 
     private val _habit = mutableStateOf<HabitModel?>(null)
     val habit: State<HabitModel?> = _habit
@@ -31,15 +36,17 @@ class EntryViewModel(
 
     fun fetchEntriesForHabit(habitId: String) {
         _isLoading.value = true
-        entryRepository.getEntriesForHabit(habitId)
-            .addOnSuccessListener { result ->
-                _entries.value = result
+        viewModelScope.launch {
+            try {
+                val results = entryRepository.getEntriesForHabit(habitId).await()
+                _entries.clear()
+                _entries.addAll(results)
+            } catch (e: Exception) {
+                _error.value = e.message
+            } finally {
                 _isLoading.value = false
             }
-            .addOnFailureListener { exception ->
-                _error.value = exception.localizedMessage
-                _isLoading.value = false
-            }
+        }
     }
 
     fun fetchHabit(habitId: String) {

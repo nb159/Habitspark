@@ -55,14 +55,15 @@ class MainActivity : ComponentActivity() {
                             habitsScreen(
                                 user = user!!,
                                 onHabitClick = { habitId: String ->
-                                    navController.navigate(Screen.HabitDetail.createRoute(habitId))
+                                    navController.navigate(Screen.HabitDetail.createRoute(habitId, user!!.id))
                                 }
                             )
                         }
 
                         composable(Screen.HabitDetail.route) { backStackEntry ->
                             val habitId = backStackEntry.arguments?.getString("habitId") ?: return@composable
-                            habitDetailsScreen(habitId = habitId)
+                            val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
+                            habitDetailsScreen(habitId = habitId, userId = userId)
                         }
                     }
                 }
@@ -83,8 +84,8 @@ class MainActivity : ComponentActivity() {
 
 sealed class Screen(val route: String) {
     object Habits : Screen("habits")
-    object HabitDetail : Screen("habitDetail/{habitId}") {
-        fun createRoute(habitId: String) = "habitDetail/$habitId"
+    object HabitDetail : Screen("habitDetail/{habitId}/{userId}") {
+        fun createRoute(habitId: String, userId: String) = "habitDetail/$habitId/$userId"
     }
 
 }

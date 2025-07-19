@@ -3,8 +3,14 @@ package com.example.habitspark.ui.views.habits
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -19,17 +25,27 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.habitspark.data.models.DifficultyLevel
+import com.example.habitspark.data.models.EntryModel
 import com.example.habitspark.data.models.HabitModel
+import com.example.habitspark.data.models.Mood
+import com.example.habitspark.ui.theme.PrimaryText
+import com.example.habitspark.ui.theme.SecondaryText
+import com.example.habitspark.ui.theme.SurfaceColor
 
 @Composable
 fun habitDetailsScreen(
     habitId: String,
+    userId: String,
 ) {
     val entryViewModel: EntryViewModel = viewModel()
-    val entries by entryViewModel.entries.collectAsState()
+    val entries = entryViewModel.entries
     val habit by entryViewModel.habit
 
     LaunchedEffect(habitId) {
@@ -37,10 +53,12 @@ fun habitDetailsScreen(
         entryViewModel.fetchHabit(habitId)
     }
 
+    var showDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
-                onClick = {},
+                onClick = {showDialog = true},
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
@@ -56,9 +74,20 @@ fun habitDetailsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Log.d("HabitsDetailScreen", "habit: ${habit.toString()}")
             habit?.let {  habitHeader(it) }
-//            entries?.let { entryList(it) }
+            Spacer(modifier = Modifier.height(30.dp))
+            entries?.let { entryList(it) }
+            if (showDialog) {
+                addEntryDialog(
+                    userId = userId,
+                    habitId = habitId,
+                    onDismiss = { showDialog = false },
+                    onSave = { entry ->
+                        Log.d("HabitDetailsScreen", "Saving entry: $entry")
+                        entryViewModel.addEntry(entry)
+                    }
+                )
+            }
 
         }
     }
@@ -80,7 +109,9 @@ fun habitHeader(habit: HabitModel) {
     }
 
     Card(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(160.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(8.dp)
@@ -122,3 +153,36 @@ fun habitHeader(habit: HabitModel) {
     }
 }
 
+@Composable
+fun entryList(entries: List<EntryModel>) {
+    if (entries.isEmpty()) {
+        Text("No entries yet", color = SecondaryText)
+        return
+    }
+
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        items(entries) { entry ->
+            entryItem(entry)
+        }
+    }
+
+}
+@Composable
+fun entryItem(entry: EntryModel) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 120.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceColor),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Log.d("HabitsDetailScreen", "Entry ${entry}")
+        Column(Modifier.padding(12.dp)) {
+            Text(text = entry.description, color = PrimaryText)
+            Text(text = "Mood: ${entry.moodValue}", color = SecondaryText)
+            Text(text = "Difficulty: ${entry.difficultyValue}", color = SecondaryText)
+            Text(text = "Spent: ${entry.minutesSpent} min", color = SecondaryText)
+        }
+    }
+}

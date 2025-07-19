@@ -89,7 +89,7 @@ fun habitsScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            habitList(habits = habits, onHabitClick)
+            habitList(userId = user.id, habits = habits, onHabitClick)
             if (showDialog) {
                 addHabitDialog(
                     userId = user.id,
@@ -233,6 +233,7 @@ fun userHeader(
 
 @Composable
 fun habitList(
+    userId: String,
     habits: SnapshotStateList<HabitModel>,
     onHabitClick: (habitId: String) -> Unit = {}
 ) {
@@ -248,7 +249,7 @@ fun habitList(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(habits) { habit ->
-            habitItem(habit = habit, onHabitClick)
+            habitItem(userId = userId ,habit = habit, onHabitClick)
         }
     }
 }
@@ -256,6 +257,7 @@ fun habitList(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun habitItem(
+    userId: String,
     habit: HabitModel,
     onHabitClick: (habitId: String) -> Unit = {}
 ) {
