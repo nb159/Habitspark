@@ -11,7 +11,7 @@ data class EntryModel(
     val minutesSpent: Int? = null,
     val moodValue: Int? = null,           // Stored as integer from Mood enum
     val difficultyValue: Int? = null,     // Stored as integer from DifficultyLevel enum
-    val timestamp: Timestamp = Timestamp.now()
+    val createdDate: Timestamp = Timestamp.now()
 )
 
 enum class Mood(val emoji: String, val value: Int) {

@@ -1,48 +1,30 @@
 package com.example.habitspark.ui.views.onboarding
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-
-enum class InputType {
-    TEXT, SELECT, BOOLEAN, NUMBER
-}
-
-data class DemographicQuestion(
-    val id: String,
-    val question: String,
-    val inputType: InputType,
-    val options: List<String>? = null // Only for SELECT or BOOLEAN
-)
+import com.example.habitspark.data.dataTypes.FormQuestions
+import com.example.habitspark.data.dataTypes.InputType
+import com.example.habitspark.utils.inputFieldQuestion
 
 data class DemographicData(
     val userName: String,
@@ -71,10 +53,10 @@ fun demographicQuestionnaireScreen(
     onNext: (DemographicData) -> Unit
 ) {
     val questions = listOf(
-        DemographicQuestion("userName", "What is your name?", InputType.TEXT),
-        DemographicQuestion("age", "What is your age?", InputType.TEXT),
-        DemographicQuestion("gender", "What is your gender?", InputType.SELECT, listOf("Male", "Female", "Other")),
-        DemographicQuestion("country", "What country are you from?", InputType.TEXT),
+        FormQuestions("userName", "What is your name?", InputType.TEXT),
+        FormQuestions("age", "What is your age?", InputType.NUMBER),
+        FormQuestions("gender", "What is your gender?", InputType.SELECT, listOf("Male", "Female", "Other")),
+        FormQuestions("country", "What country are you from?", InputType.TEXT),
     )
 
     val answers = remember { mutableStateMapOf<String, String>() }
@@ -106,75 +88,24 @@ fun demographicQuestionnaireScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp)
+                        .padding(vertical = 8.dp) // ✅ padding on sides too
                         .heightIn(min = 100.dp),
                     colors = CardDefaults.cardColors(containerColor = containerColor),
                     elevation = CardDefaults.cardElevation(4.dp)
                 ) {
                     Column(
                         modifier = Modifier
-                            .padding(16.dp)
-                            .align(Alignment.CenterHorizontally),
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(
-                            text = question.question,
-                            color = textColor
+                        inputFieldQuestion(
+                            question = question,
+                            answer = answers[question.id] ?: "",
+                            onAnswerChange = { answer ->
+                                answers[question.id] = answer
+                            }
                         )
-                        Spacer(modifier = Modifier.height(15.dp))
-
-                        when (question.inputType) {
-                            InputType.TEXT -> {
-                                TextField(
-                                    value = answers[question.id] ?: "",
-                                    onValueChange = { answers[question.id] = it },
-                                    singleLine = true,
-                                    placeholder = { Text("Type here...", color = textColor.copy(alpha = 0.5f)) },
-                                    keyboardOptions = KeyboardOptions.Default.copy(
-                                        keyboardType = if (question.id == "age") KeyboardType.Number else KeyboardType.Text
-                                    ),
-                                    colors = TextFieldDefaults.colors(
-                                        focusedContainerColor = containerColor,
-                                        unfocusedContainerColor = containerColor,
-                                        disabledContainerColor = containerColor,
-                                        focusedIndicatorColor = Color.Transparent,
-                                        unfocusedIndicatorColor = Color.Transparent,
-                                        disabledIndicatorColor = Color.Transparent,
-                                        focusedTextColor = textColor,
-                                        unfocusedTextColor = textColor
-                                    ),
-                                    shape = RoundedCornerShape(12.dp),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(56.dp)
-                                )
-                            }
-
-                            InputType.SELECT, InputType.BOOLEAN -> {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceEvenly
-                                ) {
-                                    question.options?.forEach { option ->
-                                        val selected = answers[question.id] == option
-                                        OutlinedButton(
-                                            onClick = { answers[question.id] = option },
-                                            border = BorderStroke(
-                                                1.dp,
-                                                if (selected) accentColor else textColor.copy(alpha = 0.3f)
-                                            )
-                                        ) {
-                                            Text(
-                                                text = option,
-                                                color = if (selected) accentColor else textColor
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            else -> {}
-
-                        }
                     }
                 }
             }

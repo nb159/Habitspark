@@ -1,6 +1,5 @@
 package com.example.habitspark.ui.views.habits
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,7 +26,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -97,7 +95,6 @@ fun habitDetailsScreen(
                     habitId = habitId,
                     onDismiss = { showDialog = false },
                     onSave = { entry ->
-                        Log.d("HabitDetailsScreen", "Saving entry: $entry")
                         entryViewModel.addEntry(entry)
                     }
                 )
@@ -186,10 +183,10 @@ fun entryItem(entry: EntryModel, onEntryDelete: (entryId: String) -> Unit = {}) 
     val difficulty = entry.difficultyValue?.let { DifficultyLevel.fromValue(it) }
     val mood = entry.moodValue?.let { Mood.fromValue(it) }
 
-    val formattedTimestamp = remember(entry.timestamp) {
+    val formattedTimestamp = remember(entry.createdDate) {
         // Format: Jul 19, 10:45 AM
         val sdf = java.text.SimpleDateFormat("MMM dd, h:mm a", java.util.Locale.getDefault())
-        sdf.format(entry.timestamp.toDate())
+        sdf.format(entry.createdDate.toDate())
     }
         Card(
             modifier = Modifier

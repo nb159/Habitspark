@@ -17,5 +17,6 @@ data class HabitModel(
     val averageSessionMinutes: Double = 0.0,
     val difficultyRatingAverage: Float = 0f, // User-rated difficulty (0-5 scale?)
     val entryMoodAverage: Float = 0f, // Average mood score from entries
-    val iconUrl: String = ""
+    val iconUrl: String = "",
+    val createdDate: Timestamp = Timestamp.now()
 )

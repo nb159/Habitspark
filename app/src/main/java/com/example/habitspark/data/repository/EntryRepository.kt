@@ -35,7 +35,7 @@ class EntryRepository(db: FirebaseFirestore) {
     fun getEntriesForHabit(habitId: String): Task<List<EntryModel>> {
         return entriesCollection
             .whereEqualTo("habitId", habitId)
-            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .orderBy("createdDate", Query.Direction.DESCENDING)
             .get()
             .continueWith { task ->
                 task.result?.documents?.mapNotNull { doc ->
@@ -48,7 +48,7 @@ class EntryRepository(db: FirebaseFirestore) {
     fun getEntriesForUser(userId: String): Task<List<EntryModel>> {
         return entriesCollection
             .whereEqualTo("userId", userId)
-            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .orderBy("createdDate", Query.Direction.DESCENDING)
             .get()
             .continueWith { task ->
                 task.result?.documents?.mapNotNull { doc ->

@@ -11,10 +11,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.habitspark.data.repository.UserPreferencesManager
 import com.example.habitspark.ui.theme.HabitSparkTheme
-import com.example.habitspark.ui.views.habits.habitsScreen
 import com.example.habitspark.ui.views.habits.habitDetailsScreen
+import com.example.habitspark.ui.views.habits.habitsScreen
 import com.example.habitspark.ui.views.user.UserViewModel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -27,11 +29,10 @@ class MainActivity : ComponentActivity() {
             val user by userViewModel.user
             lifecycleScope.launch {
                 try {
-                    val userId = "TMMFEXhbgy5hYFIMtASi"
-//                    val userId = UserPreferencesManager.getUserId(this@MainActivity).first()
+//                    val userId = "TMMFEXhbgy5hYFIMtASi"
+                    val userId = UserPreferencesManager.getUserId(this@MainActivity).first()
 
                     if (userId != null) {
-                        Log.d("MainActivity", "userId: ${userId}")
                         userViewModel.fetchUser(userId)
                     } else {
                         // No user ID saved (first launch probably)
@@ -50,8 +51,6 @@ class MainActivity : ComponentActivity() {
                     NavHost(navController = navController, startDestination = Screen.Habits.route) {
 
                         composable(Screen.Habits.route) {
-                            Log.d("HabitsScreen", user.toString())
-
                             habitsScreen(
                                 user = user!!,
                                 onHabitClick = { habitId: String ->
@@ -68,7 +67,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                Log.d("MainActivity", "habits screen")
 //
 //                    Log.d("MainActivity", "habits screen: ${user}")
 //                    habitsScreen(

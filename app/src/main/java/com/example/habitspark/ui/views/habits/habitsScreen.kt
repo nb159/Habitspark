@@ -132,7 +132,6 @@ fun userHeader(
     userModel: UserModel,
     totalHabitHours: Double?
 ) {
-    Log.d("HabitScreen", "hours: ${totalHabitHours}")
     Card(
         modifier = Modifier
             .fillMaxWidth()
