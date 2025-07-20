@@ -1,7 +1,6 @@
 package com.example.habitspark.ui.views.habits
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,15 +19,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DismissDirection
+import androidx.compose.material3.DismissValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDismissState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -53,24 +58,33 @@ import com.example.habitspark.ui.theme.PrimaryText
 import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.theme.SurfaceColor
 
+
+data class EntryDialogState(
+    val visible: Boolean = false,
+    val habitId: String = ""
+)
+
 @Composable
 fun habitsScreen(
     user: UserModel,
     onHabitClick: (habitId: String) -> Unit = {},
 ) {
     val habitViewModel: HabitViewModel = viewModel()
+    val entryViewModel: EntryViewModel = viewModel()
+
     val habits = habitViewModel.habits
 
     LaunchedEffect(Unit) {
         habitViewModel.fetchHabits(user.id)
     }
 
-    var showDialog by remember { mutableStateOf(false) }
+    var showHabitDialog by remember { mutableStateOf(false) }
+    var showEntryDialog by remember { mutableStateOf(EntryDialogState()) }
 
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { showDialog = true },
+                onClick = { showHabitDialog = true },
                 containerColor = PrimaryAccent,
                 contentColor = PrimaryText
             ) {
@@ -89,12 +103,35 @@ fun habitsScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            habitList(userId = user.id, habits = habits, onHabitClick)
-            if (showDialog) {
+            habitList(
+                habits = habits,
+                onHabitClick,
+                onHabitDelete = { habitId ->
+                    habitViewModel.deleteHabit(habitId)
+                    habitViewModel.fetchHabits(user.id)
+                },
+                onAddEntryClicked = { habitId ->
+                    showEntryDialog = EntryDialogState(visible = true, habitId = habitId)
+                }
+            )
+            if (showHabitDialog) {
                 addHabitDialog(
                     userId = user.id,
-                    onDismiss = { showDialog = false },
-                    onSave = { habit -> habitViewModel.addHabit(habit) }
+                    onDismiss = { showHabitDialog = false },
+                    onSave = { habit ->
+                        habitViewModel.addHabit(habit)
+                        habitViewModel.fetchHabits(user.id)
+                    }
+                )
+            }
+            if (showEntryDialog.visible) {
+                addEntryDialog(
+                    userId = user.id,
+                    habitId = showEntryDialog.habitId,
+                    onDismiss = { showEntryDialog = EntryDialogState() },
+                    onSave = { entry ->
+                        entryViewModel.addEntry(entry)
+                    }
                 )
             }
         }
@@ -232,9 +269,10 @@ fun userHeader(
 
 @Composable
 fun habitList(
-    userId: String,
     habits: SnapshotStateList<HabitModel>,
-    onHabitClick: (habitId: String) -> Unit = {}
+    onHabitClick: (habitId: String) -> Unit = {},
+    onHabitDelete: (habitId: String) -> Unit = {},
+    onAddEntryClicked: (habitId: String) -> Unit = {}
 ) {
     if (habits.isEmpty()) {
         Text(
@@ -248,7 +286,7 @@ fun habitList(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(habits) { habit ->
-            habitItem(userId = userId ,habit = habit, onHabitClick)
+            habitItem(habit = habit, onHabitClick, onHabitDelete, onAddEntryClicked)
         }
     }
 }
@@ -256,60 +294,121 @@ fun habitList(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun habitItem(
-    userId: String,
     habit: HabitModel,
-    onHabitClick: (habitId: String) -> Unit = {}
+    onHabitClick: (habitId: String) -> Unit = {},
+    onHabitDelete: (habitId: String) -> Unit = {},
+    onAddEntryClicked: (habitId: String) -> Unit = {},
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(80.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceColor),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(4.dp),
-        onClick = { onHabitClick(habit.id) },
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp)
-        ) {
+    val dismissState = rememberDismissState(
+        confirmValueChange = { dismissValue ->
+            when (dismissValue) {
+                //swipe left
+                DismissValue.DismissedToStart -> {
+                    onHabitDelete(habit.id)
+                    false
+                }
+                //swipe right
+                DismissValue.DismissedToEnd -> {
+                    onAddEntryClicked(habit.id)
+                    false
+                }
+                else -> false
+            }
+        },
+        positionalThreshold = { totalDistance -> totalDistance * 0.5f } // 50% swipe required
+
+    )
+
+    SwipeToDismiss(
+        state = dismissState,
+        directions = setOf(DismissDirection.EndToStart, DismissDirection.StartToEnd),
+        background = {
+            val direction = dismissState.dismissDirection
+            val color = when (direction) {
+                DismissDirection.EndToStart -> Color.Red
+                DismissDirection.StartToEnd -> Color(0xFF4CAF50) // Green for archive
+                null -> Color.Transparent
+            }
+
+            val icon = when (direction) {
+                DismissDirection.EndToStart -> Icons.Default.Delete
+                DismissDirection.StartToEnd -> Icons.Default.Add
+                null -> null
+            }
+
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .background(PrimaryAccent, shape = RoundedCornerShape(8.dp))
-            ) {
-                // Habit Icon Placeholder
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(color)
+                    .padding(horizontal = 20.dp),
+                contentAlignment = when (direction) {
+                    DismissDirection.EndToStart -> Alignment.CenterEnd
+                    DismissDirection.StartToEnd -> Alignment.CenterStart
+                    else -> Alignment.Center
+                },
+                ) {
+                if (icon != null) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = Color.White
+                    )
+                }
             }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(
-                modifier = Modifier.weight(1f)
+        },
+        dismissContent = {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp),
+                colors = CardDefaults.cardColors(containerColor = SurfaceColor),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(4.dp),
+                onClick = { onHabitClick(habit.id) },
             ) {
-                Text(
-                    text = habit.name,
-                    color = PrimaryText,
-                    style = MaterialTheme.typography.bodyLarge
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(PrimaryAccent, shape = RoundedCornerShape(8.dp))
+                    )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.width(16.dp))
 
-                Text(
-                    text = "Total: ${habit.totalHours} hrs • Difficulty: ${habit.difficultyRatingAverage}",
-                    color = SecondaryText,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = habit.name,
+                            color = PrimaryText,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
 
-            IconButton(onClick = { Log.d("HabitItem", "Clicked on ${habit.name}")}) {
-                Icon(
-                    imageVector = Icons.Default.AddCircle,
-                    contentDescription = "Quick Add",
-                    tint = PrimaryAccent
-                )
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = "Total: ${habit.totalHours} hrs • Difficulty: ${habit.difficultyRatingAverage}",
+                            color = SecondaryText,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+
+                    IconButton(onClick = { onAddEntryClicked(habit.id) }) {
+                        Icon(
+                            imageVector = Icons.Default.AddCircle,
+                            contentDescription = "Quick Add",
+                            tint = PrimaryAccent
+                        )
+                    }
+                }
             }
         }
-    }
+    )
 }
+
