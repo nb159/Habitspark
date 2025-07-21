@@ -1,5 +1,6 @@
 package com.example.habitspark.data.models
 
+import com.example.habitspark.data.dataTypes.GoalType
 import com.google.firebase.Timestamp
 
 data class HabitModel(
@@ -7,7 +8,7 @@ data class HabitModel(
     val userId: String = "",
     val name: String = "",
     val description: String = "",
-    val goalType: String = "", // "hours" | "count" | "completion"
+    val goalType: GoalType = GoalType.HOURS, // "hours" | "count" | "completion"
     val goalTarget: Int = 0,
     val createdAt: Timestamp = Timestamp.now(), // <-- important change
     val totalEntries: Int = 0,

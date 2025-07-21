@@ -1,5 +1,6 @@
 package com.example.habitspark.ui.views.habits
 
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -27,12 +28,11 @@ class HabitViewModel(
         viewModelScope.launch {
             try {
                 val result = habitRepository.getUserHabits(userId).await()
-                val list = result.documents.mapNotNull {
-                    it.toObject(HabitModel::class.java)?.copy(id = it.id)
-                }
+
                 _habits.clear()
-                _habits.addAll(list)
+                _habits.addAll(result)
             } catch (e: Exception) {
+                Log.e("HabitViewModel", "Error fetching habits: ${e.message}")
                 _error.value = e.message
             }
         }

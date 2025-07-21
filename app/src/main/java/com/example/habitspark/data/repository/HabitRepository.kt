@@ -32,7 +32,13 @@ class  HabitRepository(db: FirebaseFirestore) {
             }
     }
 
-    fun getUserHabits(userId: String): Task<QuerySnapshot> {
-        return habitsCollection.whereEqualTo("userId", userId).get()
+    fun getUserHabits(userId: String): Task<List<HabitModel>> {
+        return habitsCollection.whereEqualTo("userId", userId)
+            .get()
+            .continueWith { task ->
+                task.result?.documents?.mapNotNull { doc ->
+                    doc.toObject(HabitModel::class.java)?.copy(id = doc.id)
+                } ?: emptyList()
+            }
     }
 }

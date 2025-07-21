@@ -37,6 +37,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.habitspark.data.dataTypes.GoalType
 import com.example.habitspark.data.models.DifficultyLevel
 import com.example.habitspark.data.models.EntryModel
 import com.example.habitspark.data.models.HabitModel
@@ -106,16 +107,14 @@ fun habitDetailsScreen(
 
 @Composable
 fun habitHeader(habit: HabitModel) {
-    val progressText = when (habit.goalType) {
-        "hours" -> "${habit.totalHours} / ${habit.goalTarget} hrs"
-        "repetitions" -> "${habit.totalEntries} / ${habit.goalTarget} times"
-        "completion" -> if (habit.totalEntries > 0) "Completed" else "Not started"
-        else -> ""
+    val progressText = when(habit.goalType) {
+        GoalType.HOURS -> "${habit.totalHours} / ${habit.goalTarget} hrs"
+        GoalType.REPETITIONS -> "${habit.totalEntries} / ${habit.goalTarget} times"
     }
 
     val progressPercentage = when (habit.goalType) {
-        "hours" -> (habit.totalHours / habit.goalTarget).coerceAtMost(1.0) * 100
-        "repetitions" -> (habit.totalEntries.toDouble() / habit.goalTarget).coerceAtMost(1.0) * 100
+        GoalType.HOURS -> (habit.totalHours / habit.goalTarget).coerceAtMost(1.0) * 100
+        GoalType.REPETITIONS -> (habit.totalEntries.toDouble() / habit.goalTarget).coerceAtMost(1.0) * 100
         else -> 0.0
     }
 

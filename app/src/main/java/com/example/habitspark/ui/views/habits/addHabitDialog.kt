@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.habitspark.data.dataTypes.FormQuestions
+import com.example.habitspark.data.dataTypes.GoalType
 import com.example.habitspark.data.dataTypes.InputType
 import com.example.habitspark.data.models.HabitModel
 import com.example.habitspark.ui.theme.HabitSparkTheme
@@ -29,7 +30,7 @@ import com.google.firebase.Timestamp
 val habitQuestions = listOf(
     FormQuestions("name", "Habit name", InputType.TEXT),
     FormQuestions("description", "Description", InputType.TEXT),
-    FormQuestions("goalType", "Goal type", InputType.SELECT, listOf("Hours", "Check-ins")),
+    FormQuestions("goalType", "Goal type", InputType.SELECT, listOf(GoalType.HOURS.label, GoalType.REPETITIONS.label)),
     FormQuestions("goalTarget", "Goal target", InputType.NUMBER)
 )
 
@@ -49,7 +50,7 @@ fun addHabitDialog(
                     val habit = HabitModel(
                          name = answers["name"].orEmpty(),
                         description = answers["description"].orEmpty(),
-                        goalType = answers["goalType"].orEmpty(),
+                        goalType =  GoalType.fromLabel(answers["goalType"] ?: "") ?: GoalType.HOURS,
                         goalTarget = answers["goalTarget"]?.toIntOrNull() ?: 0,
                         userId = userId,
                         createdAt = Timestamp.now()
