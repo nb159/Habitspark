@@ -1,5 +1,7 @@
 package com.example.habitspark.ui.views.habits
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -10,6 +12,7 @@ import com.example.habitspark.data.models.EntryModel
 import com.example.habitspark.data.models.HabitModel
 import com.example.habitspark.data.repository.EntryRepository
 import com.example.habitspark.data.repository.HabitRepository
+import com.example.habitspark.domain.stats.StatsManager
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +31,8 @@ class EntryViewModel(
     private val _habit = mutableStateOf<HabitModel?>(null)
     val habit: State<HabitModel?> = _habit
 
+    private val statsManager = StatsManager()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
@@ -38,7 +43,7 @@ class EntryViewModel(
         _isLoading.value = true
         viewModelScope.launch {
             try {
-                val results = entryRepository.getEntriesForHabit(habitId).await()
+                val results = entryRepository.getEntriesForHabit(habitId)
                 _entries.clear()
                 _entries.addAll(results)
             } catch (e: Exception) {
@@ -50,7 +55,7 @@ class EntryViewModel(
     }
 
     fun fetchHabit(habitId: String) {
-        habitRepository.getHabit(habitId)
+        habitRepository.getHabitById(habitId)
             .addOnSuccessListener { result ->
                 _habit.value = result
             }
@@ -59,14 +64,16 @@ class EntryViewModel(
             }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun addEntry(entry: EntryModel) {
-        entryRepository.addEntry(entry)
-            .addOnSuccessListener {
-                fetchEntriesForHabit(entry.habitId)
+        viewModelScope.launch {
+            try {
+                entryRepository.addEntry(entry)
+                statsManager.handleNewEntry(entry)
+            } catch (e: Exception) {
+                _error.value = e.message
             }
-            .addOnFailureListener {
-                _error.value = it.localizedMessage
-            }
+        }
     }
 
     fun deleteEntry(entryId: String, habitId: String) {

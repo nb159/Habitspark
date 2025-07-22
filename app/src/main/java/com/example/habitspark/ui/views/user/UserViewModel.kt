@@ -18,21 +18,21 @@ class UserViewModel(
     private val _user = mutableStateOf<UserModel?>(null)
     val user: State<UserModel?> = _user
 
-    fun fetchUser(userId: String) {
+    fun getUserById(userId: String) {
         viewModelScope.launch {
             try {
-                val result = userRepository.getUser(userId).await()
-                _user.value = result.toObject(UserModel::class.java)?.copy(id = result.id)
+                val result = userRepository.getUserById(userId).await()
+                _user.value = result
             } catch (e: Exception) {
                 // Handle error
             }
         }
     }
 
-    fun updateUser(userId: String, user: UserModel) {
+    fun updateUser(user: UserModel) {
         viewModelScope.launch {
             try {
-                userRepository.updateUser(userId, user)
+                userRepository.updateUser(user)
                 _user.value = user
             } catch (e: Exception) {
                 // Handle error

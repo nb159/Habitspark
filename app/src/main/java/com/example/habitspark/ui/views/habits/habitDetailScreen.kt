@@ -1,5 +1,7 @@
 package com.example.habitspark.ui.views.habits
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,6 +48,7 @@ import com.example.habitspark.ui.theme.PrimaryText
 import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.theme.SurfaceColor
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun habitDetailsScreen(
     habitId: String,
@@ -97,6 +100,7 @@ fun habitDetailsScreen(
                     onDismiss = { showDialog = false },
                     onSave = { entry ->
                         entryViewModel.addEntry(entry)
+                        entryViewModel.fetchEntriesForHabit(habitId)
                     }
                 )
             }
@@ -108,12 +112,12 @@ fun habitDetailsScreen(
 @Composable
 fun habitHeader(habit: HabitModel) {
     val progressText = when(habit.goalType) {
-        GoalType.HOURS -> "${habit.totalHours} / ${habit.goalTarget} hrs"
+        GoalType.HOURS -> "${habit.totalMinutes} / ${habit.goalTarget} hrs"
         GoalType.REPETITIONS -> "${habit.totalEntries} / ${habit.goalTarget} times"
     }
 
     val progressPercentage = when (habit.goalType) {
-        GoalType.HOURS -> (habit.totalHours / habit.goalTarget).coerceAtMost(1.0) * 100
+        GoalType.HOURS -> (habit.totalMinutes / habit.goalTarget).coerceAtMost(1.0) * 100
         GoalType.REPETITIONS -> (habit.totalEntries.toDouble() / habit.goalTarget).coerceAtMost(1.0) * 100
         else -> 0.0
     }
@@ -149,7 +153,7 @@ fun habitHeader(habit: HabitModel) {
             )
 
             Text(
-                text = "Total Time: ${String.format("%.1f", habit.totalHours)} hrs",
+                text = "Total Time: ${String.format("%.1f", habit.totalMinutes)} hrs",
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.bodyMedium
             )

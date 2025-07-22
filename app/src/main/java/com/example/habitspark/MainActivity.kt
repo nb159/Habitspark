@@ -2,10 +2,12 @@ package com.example.habitspark
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
@@ -21,6 +23,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("CoroutineCreationDuringComposition")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,7 +36,7 @@ class MainActivity : ComponentActivity() {
                     val userId = UserPreferencesManager.getUserId(this@MainActivity).first()
 
                     if (userId != null) {
-                        userViewModel.fetchUser(userId)
+                        userViewModel.getUserById(userId)
                     } else {
                         // No user ID saved (first launch probably)
                         startActivity(Intent(this@MainActivity, QuestionnaireActivity::class.java))

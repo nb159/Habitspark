@@ -1,6 +1,8 @@
 package com.example.habitspark.ui.views.habits
 
 import android.annotation.SuppressLint
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -64,6 +66,7 @@ data class EntryDialogState(
     val habitId: String = ""
 )
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun habitsScreen(
     user: UserModel,
@@ -99,7 +102,7 @@ fun habitsScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            userHeader(userModel = user, totalHabitHours = habits?.sumOf { it.totalHours })
+            userHeader(userModel = user, totalHabitHours = habits?.sumOf { it.totalMinutes })
 
             Spacer(modifier = Modifier.height(30.dp))
 
@@ -139,6 +142,7 @@ fun habitsScreen(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("UnrememberedMutableState")
 @Preview(showBackground = true)
 @Composable
@@ -393,7 +397,7 @@ fun habitItem(
                         Spacer(modifier = Modifier.height(4.dp))
 
                         Text(
-                            text = "Total: ${habit.totalHours} hrs • Difficulty: ${habit.difficultyRatingAverage}",
+                            text = "Total: ${habit.totalMinutes} hrs • Difficulty: ${habit.difficultyRatingAverage}",
                             color = SecondaryText,
                             style = MaterialTheme.typography.bodySmall
                         )

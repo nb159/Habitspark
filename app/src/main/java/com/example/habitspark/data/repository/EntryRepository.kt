@@ -6,6 +6,7 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.toObject
+import kotlinx.coroutines.tasks.await
 
 class EntryRepository(db: FirebaseFirestore) {
 
@@ -32,15 +33,15 @@ class EntryRepository(db: FirebaseFirestore) {
             }
     }
 
-    fun getEntriesForHabit(habitId: String): Task<List<EntryModel>> {
+    suspend fun getEntriesForHabit(habitId: String): List<EntryModel> {
         return entriesCollection
             .whereEqualTo("habitId", habitId)
             .orderBy("createdDate", Query.Direction.DESCENDING)
             .get()
-            .continueWith { task ->
-                task.result?.documents?.mapNotNull { doc ->
-                    doc.toObject(EntryModel::class.java)?.copy(id = doc.id)
-                } ?: emptyList()
+            .await()
+            .documents
+            .mapNotNull { doc ->
+                doc.toObject(EntryModel::class.java)?.copy(id = doc.id)
             }
     }
 

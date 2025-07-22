@@ -4,7 +4,6 @@ import com.example.habitspark.data.models.HabitModel
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.toObject
 
 class  HabitRepository(db: FirebaseFirestore) {
@@ -23,7 +22,7 @@ class  HabitRepository(db: FirebaseFirestore) {
         return habitsCollection.document(habitId).delete()
     }
 
-    fun getHabit(habitId: String): Task<HabitModel?> {
+    fun getHabitById(habitId: String): Task<HabitModel?> {
         return habitsCollection.document(habitId)
             .get()
             .continueWith { task ->
