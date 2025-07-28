@@ -1,6 +1,8 @@
 package com.example.habitspark.ui.views.habits
 
 import android.os.Build
+import android.util.Log
+import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,11 +37,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.habitspark.R
 import com.example.habitspark.data.dataTypes.GoalType
 import com.example.habitspark.data.models.DifficultyLevel
 import com.example.habitspark.data.models.EntryModel
@@ -47,6 +53,9 @@ import com.example.habitspark.data.models.Mood
 import com.example.habitspark.ui.theme.PrimaryText
 import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.theme.SurfaceColor
+import com.example.habitspark.utils.minutesToDecimalHours
+import com.example.habitspark.utils.minutesToHoursMinutes
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -111,66 +120,115 @@ fun habitDetailsScreen(
 
 @Composable
 fun habitHeader(habit: HabitModel) {
+
     val progressText = when(habit.goalType) {
-        GoalType.HOURS -> "${habit.totalMinutes} / ${habit.goalTarget} hrs"
+        GoalType.HOURS -> {
+            val formattedHours = minutesToDecimalHours(habit.totalMinutes)
+            "$formattedHours / ${habit.goalTarget} hrs"
+        }
         GoalType.REPETITIONS -> "${habit.totalEntries} / ${habit.goalTarget} times"
     }
 
     val progressPercentage = when (habit.goalType) {
-        GoalType.HOURS -> (habit.totalMinutes / habit.goalTarget).coerceAtMost(1.0) * 100
+        GoalType.HOURS -> {
+            Log.d("HabitDetails", "Total Minutes: ${habit.totalMinutes}, Goal Target: ${habit.goalTarget}")
+            ((habit.totalMinutes.toDouble() / 60) / habit.goalTarget.toDouble()) * 100
+        }
         GoalType.REPETITIONS -> (habit.totalEntries.toDouble() / habit.goalTarget).coerceAtMost(1.0) * 100
-        else -> 0.0
     }
+    Log.d("HabitDetails", "Progress: $progressText, Percentage: $progressPercentage")
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(160.dp),
+            .heightIn(min = 160.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(8.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Title
             Text(
                 text = habit.name,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
-
             Text(
-                text = "Goal: $progressText",
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.bodyMedium
+                text = habit.description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
-            Text(
-                text = "Progress: ${"%.0f".format(progressPercentage)}%",
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.bodyMedium
-            )
+            // Stats Section (icons + values)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    IconRow(iconRes = R.drawable.target, value = progressText, Color.White)  // goal
+                    IconRow(iconRes = R.drawable.progress, value = "${progressPercentage.toInt()}%", Color.White)  // progress
+                }
 
-            Text(
-                text = "Total Time: ${String.format("%.1f", habit.totalMinutes)} hrs",
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Text(
-                text = "Current Streak: ${habit.currentStreak} days",
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.bodyMedium
-            )
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    IconRow(iconRes = R.drawable.clock, value = "${minutesToHoursMinutes(habit.totalMinutes)} hrs", Color.White)  // time
+                    IconRow(iconRes = R.drawable.streak, value = "${habit.currentStreak} days")  // streak
+                }
+            }
         }
     }
 }
 
 @Composable
+fun IconRow(@DrawableRes iconRes: Int, value: String, tint: Color = Color.Unspecified) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            painter = painterResource(id = iconRes),
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(18.dp)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = PrimaryText
+        )
+    }
+}
+
+
+@Composable
 fun entryList(entries: List<EntryModel>, onEntryDelete: (entryId: String) -> Unit ={}) {
     if (entries.isEmpty()) {
-        Text("No entries yet", color = SecondaryText)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+//            verticalArrangement = Arrangement.Center
+        ) {
+            Spacer(modifier = Modifier.weight(0.3f)) // Pushes content slightly down
+            Text(
+                text = "One day... or Day one",
+                color = SecondaryText,
+                style = MaterialTheme.typography.headlineSmall
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = "Start your first entry",
+                color = SecondaryText,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(modifier = Modifier.weight(0.7f)) // Fills remaining space below
+
+        }
         return
     }
 
@@ -228,7 +286,7 @@ fun entryItem(entry: EntryModel, onEntryDelete: (entryId: String) -> Unit = {}) 
 
                         Text(
                             text = buildAnnotatedString {
-                                append("${entry.minutesSpent ?: 0} minutes")
+                                append("${entry.minutesSpent} minutes")
 
                                 if (difficultyLabel != null) {
                                     append("  /  ")

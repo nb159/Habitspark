@@ -37,10 +37,10 @@ class StatsManager(
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun updateHabitStats(habit: HabitModel, entry: EntryModel): HabitModel {
         val newTotalEntries = habit.totalEntries + 1
-        val newTotalMinutes = habit.totalMinutes + ((entry.minutesSpent ?: 0) / 60.0)
+        val newTotalMinutes = habit.totalMinutes + entry.minutesSpent
 
         val newAvgSessionMinutes = if (newTotalEntries > 0)
-            (habit.averageSessionMinutes * habit.totalEntries + (entry.minutesSpent ?: 0)) / newTotalEntries
+            (habit.averageSessionMinutes * habit.totalEntries + entry.minutesSpent) / newTotalEntries
         else 0.0
 
         val newMood = entry.moodValue?.let {

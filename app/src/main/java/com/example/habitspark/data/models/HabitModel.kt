@@ -12,7 +12,7 @@ data class HabitModel(
     val goalTarget: Int = 0,
     val createdAt: Timestamp = Timestamp.now(), // <-- important change
     val totalEntries: Int = 0,
-    val totalMinutes: Double = 0.0,
+    val totalMinutes: Int = 0,
     val currentStreak: Int = 0,
     val highestStreak: Int = 0,
     val averageSessionMinutes: Double = 0.0,

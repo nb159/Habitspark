@@ -53,12 +53,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.habitspark.R
 import com.example.habitspark.data.models.HabitModel
 import com.example.habitspark.data.models.Metrics
+import com.example.habitspark.data.models.Mood
 import com.example.habitspark.data.models.UserModel
 import com.example.habitspark.ui.theme.BackgroundColor
 import com.example.habitspark.ui.theme.PrimaryAccent
 import com.example.habitspark.ui.theme.PrimaryText
 import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.theme.SurfaceColor
+import com.example.habitspark.utils.minutesToHoursMinutes
 
 
 data class EntryDialogState(
@@ -102,7 +104,7 @@ fun habitsScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            userHeader(userModel = user, totalHabitHours = habits?.sumOf { it.totalMinutes })
+            userHeader(userModel = user, totalHabitHours = habits.sumOf { it.totalMinutes })
 
             Spacer(modifier = Modifier.height(30.dp))
 
@@ -171,8 +173,10 @@ fun habitsScreenPreview() {
 @Composable
 fun userHeader(
     userModel: UserModel,
-    totalHabitHours: Double?
+    totalHabitHours: Int?
 ) {
+    val totalHoursOnHabits = totalHabitHours?.let { minutesToHoursMinutes(it) } ?: "0:00"
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -260,7 +264,7 @@ fun userHeader(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "${String.format("%.1f", totalHabitHours)} hrs",
+                            text = "$totalHoursOnHabits hrs",
                             color = PrimaryText,
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -303,6 +307,7 @@ fun habitItem(
     onHabitDelete: (habitId: String) -> Unit = {},
     onAddEntryClicked: (habitId: String) -> Unit = {},
 ) {
+    val totalHabitHours =  minutesToHoursMinutes(habit.totalMinutes)
     val dismissState = rememberDismissState(
         confirmValueChange = { dismissValue ->
             when (dismissValue) {
@@ -397,7 +402,7 @@ fun habitItem(
                         Spacer(modifier = Modifier.height(4.dp))
 
                         Text(
-                            text = "Total: ${habit.totalMinutes} hrs • Difficulty: ${habit.difficultyRatingAverage}",
+                            text = "$totalHabitHours hrs • Mood: ${Mood.fromValue(habit.entryMoodAverage)?.emoji}",
                             color = SecondaryText,
                             style = MaterialTheme.typography.bodySmall
                         )

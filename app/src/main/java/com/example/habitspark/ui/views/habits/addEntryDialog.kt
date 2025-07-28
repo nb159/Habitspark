@@ -3,7 +3,7 @@ package com.example.habitspark.ui.views.habits
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -17,7 +17,9 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.habitspark.data.dataTypes.FormQuestions
 import com.example.habitspark.data.dataTypes.InputType
 import com.example.habitspark.data.models.DifficultyLevel
@@ -28,14 +30,8 @@ import com.example.habitspark.ui.theme.PrimaryText
 import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.theme.SurfaceColor
 import com.example.habitspark.utils.inputFieldQuestion
+import com.google.accompanist.flowlayout.FlowRow
 import com.google.firebase.Timestamp
-
-data class EntryQuestion(
-    val id: String,
-    val question: String,
-    val inputType: InputType,
-    val options: List<String>? = null
-)
 
 val entryQuestions = listOf(
     FormQuestions("duration", "Duration (minutes)", InputType.NUMBER),
@@ -52,7 +48,7 @@ fun addEntryDialog(
 ) {
     val answers = remember { mutableStateMapOf<String, String>() }
 
-    var selectedMood by remember { mutableStateOf<Mood?>(null) }
+    var selectedMood by remember { mutableStateOf<Mood?>(Mood.OKAY) }
     var selectedDifficulty by remember { mutableStateOf<DifficultyLevel?>(DifficultyLevel.VERY_EASY) }
 
     AlertDialog(
@@ -63,7 +59,7 @@ fun addEntryDialog(
                     userId = userId,
                     habitId = habitId,
                     description = answers["notes"].orEmpty(),
-                    minutesSpent = answers["duration"]?.toIntOrNull(),
+                    minutesSpent = answers["duration"]?.toInt() ?:0,
                     moodValue = selectedMood?.value,
                     difficultyValue = selectedDifficulty?.value,
                     createdDate = Timestamp.now()
@@ -92,7 +88,11 @@ fun addEntryDialog(
 
                 // Mood & Difficulty
                 Text("Mood", color = SecondaryText)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    mainAxisSpacing = 2.dp,
+                    crossAxisSpacing = 4.dp
+                ) {
                     Mood.entries.forEach { mood ->
                         Button(
                             onClick = { selectedMood = mood },
@@ -101,7 +101,8 @@ fun addEntryDialog(
                                 contentColor = PrimaryText
                             )
                         ) {
-                            Text(mood.emoji)
+                            Text( fontSize = 20.sp,
+                                text=mood.emoji)
                         }
                     }
                 }

@@ -73,6 +73,8 @@ dependencies {
     //firebase
     implementation(platform("com.google.firebase:firebase-bom:33.12.0"))
     implementation("com.google.firebase:firebase-firestore")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4")
+
 
     //datastore
     implementation ("androidx.datastore:datastore-preferences:1.0.0")
@@ -82,6 +84,9 @@ dependencies {
 
     //navigation
     implementation ("androidx.navigation:navigation-compose:2.7.5")
+
+    //flowRow
+    implementation ("com.google.accompanist:accompanist-flowlayout:0.30.1")
 
 
 

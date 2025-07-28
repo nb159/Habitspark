@@ -2,13 +2,14 @@ package com.example.habitspark.data.models
 
 import androidx.compose.ui.graphics.Color
 import com.google.firebase.Timestamp
+import kotlin.math.roundToInt
 
 data class EntryModel(
     val id: String = "",
     val userId: String = "",
     val habitId: String = "",
     val description: String = "",
-    val minutesSpent: Int? = null,
+    val minutesSpent: Int = 0,
     val moodValue: Int? = null,           // Stored as integer from Mood enum
     val difficultyValue: Int? = null,     // Stored as integer from DifficultyLevel enum
     val createdDate: Timestamp = Timestamp.now()
@@ -23,6 +24,7 @@ enum class Mood(val emoji: String, val value: Int) {
 
     companion object {
         fun fromValue(value: Int): Mood? = entries.firstOrNull { it.value == value }
+        fun fromValue(value: Float): Mood? = entries.firstOrNull { it.value == value.roundToInt() }
     }
 }
 
