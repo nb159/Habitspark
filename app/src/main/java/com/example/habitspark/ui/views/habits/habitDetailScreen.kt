@@ -257,7 +257,7 @@ fun entryItem(entry: EntryModel, onEntryDelete: (entry: EntryModel) -> Unit = {}
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 100.dp),
+                .heightIn(min = 80.dp),
             colors = CardDefaults.cardColors(containerColor = SurfaceColor),
             shape = RoundedCornerShape(16.dp),
             elevation = CardDefaults.cardElevation(6.dp)
