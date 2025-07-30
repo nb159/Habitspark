@@ -46,7 +46,7 @@ class EntryRepository(db: FirebaseFirestore) {
     }
 
 
-    fun getEntriesForUser(userId: String): Task<List<EntryModel>> {
+    fun getEntriesByUserId(userId: String): Task<List<EntryModel>> {
         return entriesCollection
             .whereEqualTo("userId", userId)
             .orderBy("createdDate", Query.Direction.DESCENDING)
@@ -55,6 +55,19 @@ class EntryRepository(db: FirebaseFirestore) {
                 task.result?.documents?.mapNotNull { doc ->
                     doc.toObject(EntryModel::class.java)?.copy(id = doc.id)
                 } ?: emptyList()
+            }
+    }
+
+    fun deleteEntriesByHabitId(habitId: String): Task<Void> {
+        return entriesCollection
+            .whereEqualTo("habitId", habitId)
+            .get()
+            .continueWithTask { task ->
+                val batch = entriesCollection.firestore.batch()
+                task.result?.documents?.forEach { doc ->
+                    batch.delete(doc.reference)
+                }
+                batch.commit()
             }
     }
 }

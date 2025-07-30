@@ -115,7 +115,7 @@ fun addEntryDialog(
                     onValueChange = { value ->
                         selectedDifficulty = DifficultyLevel.fromValue(value.toInt())
                     },
-                    valueRange = 0f..5f,
+                    valueRange = 1f..6f,
                     steps = 5,
                     colors = SliderDefaults.colors(
                         thumbColor = selectedDifficultyLevel.color,

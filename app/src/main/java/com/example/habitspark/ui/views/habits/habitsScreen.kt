@@ -40,6 +40,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
@@ -60,7 +61,9 @@ import com.example.habitspark.ui.theme.PrimaryAccent
 import com.example.habitspark.ui.theme.PrimaryText
 import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.theme.SurfaceColor
+import com.example.habitspark.ui.views.user.UserViewModel
 import com.example.habitspark.utils.minutesToHoursMinutes
+import kotlinx.coroutines.launch
 
 
 data class EntryDialogState(
@@ -71,16 +74,21 @@ data class EntryDialogState(
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun habitsScreen(
-    user: UserModel,
+    userId: String,
     onHabitClick: (habitId: String) -> Unit = {},
 ) {
+    val userViewModel: UserViewModel = viewModel()
     val habitViewModel: HabitViewModel = viewModel()
     val entryViewModel: EntryViewModel = viewModel()
 
     val habits = habitViewModel.habits
+    val user by userViewModel.user
+
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-        habitViewModel.fetchHabits(user.id)
+        habitViewModel.fetchHabits(userId)
+        userViewModel.getUserById(userId)
     }
 
     var showHabitDialog by remember { mutableStateOf(false) }
@@ -104,16 +112,16 @@ fun habitsScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            userHeader(userModel = user, totalHabitHours = habits.sumOf { it.totalMinutes })
+            user?.let { userHeader(userModel = it, totalHabitHours = habits.sumOf { it.totalMinutes }) }
 
             Spacer(modifier = Modifier.height(30.dp))
 
             habitList(
                 habits = habits,
                 onHabitClick,
-                onHabitDelete = { habitId ->
-                    habitViewModel.deleteHabit(habitId)
-                    habitViewModel.fetchHabits(user.id)
+                onHabitDelete = { habit ->
+                    habitViewModel.deleteHabit(habit)
+                    habitViewModel.fetchHabits(user!!.id)
                 },
                 onAddEntryClicked = { habitId ->
                     showEntryDialog = EntryDialogState(visible = true, habitId = habitId)
@@ -121,53 +129,31 @@ fun habitsScreen(
             )
             if (showHabitDialog) {
                 addHabitDialog(
-                    userId = user.id,
+                    userId = user!!.id,
                     onDismiss = { showHabitDialog = false },
                     onSave = { habit ->
                         habitViewModel.addHabit(habit)
-                        habitViewModel.fetchHabits(user.id)
+                        habitViewModel.fetchHabits(user!!.id)
                     }
                 )
             }
             if (showEntryDialog.visible) {
                 addEntryDialog(
-                    userId = user.id,
+                    userId = user!!.id,
                     habitId = showEntryDialog.habitId,
                     onDismiss = { showEntryDialog = EntryDialogState() },
                     onSave = { entry ->
-                        entryViewModel.addEntry(entry)
+                        coroutineScope.launch {
+                            entryViewModel.addEntry(entry)
+                            habitViewModel.fetchHabits(userId)
+                            userViewModel.getUserById(userId)
+                        }
                     }
                 )
             }
         }
 
     }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-@SuppressLint("UnrememberedMutableState")
-@Preview(showBackground = true)
-@Composable
-fun habitsScreenPreview() {
-    val dummyUser = UserModel(
-        name = "SparkUser",
-        age = 25,
-        email = "spark@demo.com",
-        gender = "Non-binary",
-        country = "Dreamland",
-        level = 3,
-        xp = 420,
-        primaryType = "Achiever",
-        secondaryType = "Explorer",
-        achievements = listOf("First Steps", "Daily Streak 5"),
-        currency = 1500,
-        habits = listOf(),
-        metrics = Metrics(totalHabitsTracked = 5, totalEntriesLogged = 40, streakDays = 10)
-    )
-
-    habitsScreen(
-        user = dummyUser,
-    )
 }
 
 @Composable
@@ -249,7 +235,7 @@ fun userHeader(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "${userModel.metrics.streakDays} Days",
+                            text = "${userModel.metrics.streak} Days",
                             color = PrimaryText,
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -279,7 +265,7 @@ fun userHeader(
 fun habitList(
     habits: SnapshotStateList<HabitModel>,
     onHabitClick: (habitId: String) -> Unit = {},
-    onHabitDelete: (habitId: String) -> Unit = {},
+    onHabitDelete: (habit: HabitModel) -> Unit = {},
     onAddEntryClicked: (habitId: String) -> Unit = {}
 ) {
     if (habits.isEmpty()) {
@@ -304,7 +290,7 @@ fun habitList(
 fun habitItem(
     habit: HabitModel,
     onHabitClick: (habitId: String) -> Unit = {},
-    onHabitDelete: (habitId: String) -> Unit = {},
+    onHabitDelete: (habit: HabitModel) -> Unit = {},
     onAddEntryClicked: (habitId: String) -> Unit = {},
 ) {
     val totalHabitHours =  minutesToHoursMinutes(habit.totalMinutes)
@@ -313,7 +299,7 @@ fun habitItem(
             when (dismissValue) {
                 //swipe left
                 DismissValue.DismissedToStart -> {
-                    onHabitDelete(habit.id)
+                    onHabitDelete(habit)
                     false
                 }
                 //swipe right

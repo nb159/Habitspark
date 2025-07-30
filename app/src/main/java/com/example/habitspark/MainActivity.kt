@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
 
                         composable(Screen.Habits.route) {
                             habitsScreen(
-                                user = user!!,
+                                userId = user!!.id,
                                 onHabitClick = { habitId: String ->
                                     navController.navigate(Screen.HabitDetail.createRoute(habitId, user!!.id))
                                 }

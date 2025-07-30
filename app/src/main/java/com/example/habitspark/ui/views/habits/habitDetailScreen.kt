@@ -34,6 +34,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,6 +56,7 @@ import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.theme.SurfaceColor
 import com.example.habitspark.utils.minutesToDecimalHours
 import com.example.habitspark.utils.minutesToHoursMinutes
+import kotlinx.coroutines.launch
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -66,6 +68,9 @@ fun habitDetailsScreen(
     val entryViewModel: EntryViewModel = viewModel()
     val entries = entryViewModel.entries
     val habit by entryViewModel.habit
+
+    val coroutineScope = rememberCoroutineScope()
+
 
     LaunchedEffect(habitId) {
         entryViewModel.fetchEntriesForHabit(habitId)
@@ -97,8 +102,8 @@ fun habitDetailsScreen(
             entries?.let {
                 entryList(
                     it,
-                    onEntryDelete = { entryId: String ->
-                        entryViewModel.deleteEntry(entryId, habitId)
+                    onEntryDelete = { entry: EntryModel ->
+                        entryViewModel.deleteEntry(entry)
                     }
                 )
             }
@@ -108,9 +113,11 @@ fun habitDetailsScreen(
                     habitId = habitId,
                     onDismiss = { showDialog = false },
                     onSave = { entry ->
-                        entryViewModel.addEntry(entry)
-                        entryViewModel.fetchEntriesForHabit(habitId)
-                    }
+                        coroutineScope.launch {
+                            entryViewModel.addEntry(entry)
+                            entryViewModel.fetchEntriesForHabit(habitId)
+                        }
+                    },
                 )
             }
 
@@ -205,7 +212,7 @@ fun IconRow(@DrawableRes iconRes: Int, value: String, tint: Color = Color.Unspec
 
 
 @Composable
-fun entryList(entries: List<EntryModel>, onEntryDelete: (entryId: String) -> Unit ={}) {
+fun entryList(entries: List<EntryModel>, onEntryDelete: (entry: EntryModel) -> Unit ={}) {
     if (entries.isEmpty()) {
         Column(
             modifier = Modifier
@@ -216,7 +223,7 @@ fun entryList(entries: List<EntryModel>, onEntryDelete: (entryId: String) -> Uni
         ) {
             Spacer(modifier = Modifier.weight(0.3f)) // Pushes content slightly down
             Text(
-                text = "One day... or Day one",
+                text = "One Day... or Day One",
                 color = SecondaryText,
                 style = MaterialTheme.typography.headlineSmall
             )
@@ -240,7 +247,7 @@ fun entryList(entries: List<EntryModel>, onEntryDelete: (entryId: String) -> Uni
 
 }
 @Composable
-fun entryItem(entry: EntryModel, onEntryDelete: (entryId: String) -> Unit = {}) {
+fun entryItem(entry: EntryModel, onEntryDelete: (entry: EntryModel) -> Unit = {}) {
     val difficulty = entry.difficultyValue?.let { DifficultyLevel.fromValue(it) }
     val mood = entry.moodValue?.let { Mood.fromValue(it) }
 
@@ -317,7 +324,7 @@ fun entryItem(entry: EntryModel, onEntryDelete: (entryId: String) -> Unit = {}) 
                     }
                 }
 
-                IconButton(onClick = { onEntryDelete(entry.id) }) {
+                IconButton(onClick = { onEntryDelete(entry) }) {
                     Icon(
                         modifier = Modifier.size(18.dp),
                         imageVector = Icons.Default.Delete,

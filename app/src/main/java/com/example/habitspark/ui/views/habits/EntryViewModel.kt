@@ -65,28 +65,36 @@ class EntryViewModel(
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun addEntry(entry: EntryModel) {
+    suspend fun addEntry(entry: EntryModel) {
+        try {
+            entryRepository.addEntry(entry).await()
+            statsManager.updateStatsFromEntry(entry.habitId)
+            updateStates()
+        } catch (e: Exception) {
+            _error.value = e.message
+        }
+
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun deleteEntry(entry: EntryModel) {
         viewModelScope.launch {
             try {
-                entryRepository.addEntry(entry)
-                statsManager.handleNewEntry(entry)
+                entryRepository.deleteEntry(entry.id).await()
+                statsManager.updateStatsFromEntry(entry.habitId)
+                updateStates()
             } catch (e: Exception) {
                 _error.value = e.message
             }
         }
     }
 
-    fun deleteEntry(entryId: String, habitId: String) {
-        entryRepository.deleteEntry(entryId)
-            .addOnSuccessListener {
-                fetchEntriesForHabit(habitId)
-            }
-            .addOnFailureListener {
-                _error.value = it.localizedMessage
-            }
-    }
-
     fun clearError() {
         _error.value = null
+    }
+
+    private fun updateStates(){
+        fetchEntriesForHabit(_habit.value?.id ?: "")
+        fetchHabit(_habit.value?.id ?: "")
     }
 }

@@ -23,5 +23,5 @@ data class UserModel(
 data class Metrics(
     val totalHabitsTracked: Int = 0,
     val totalEntriesLogged: Int = 0,
-    val streakDays: Int = 0
+    val streak: Int = 0
 )
