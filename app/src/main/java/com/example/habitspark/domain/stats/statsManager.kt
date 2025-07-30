@@ -23,11 +23,9 @@ class StatsManager(
         val userId = userIdOverride ?: habit?.userId ?: return@withContext
         val user = userRepository.getUserById(userId).await() ?: return@withContext
 
-        Log.d("StatsManager", "Updating stats for habit: $habit")
         if (habit != null) {
             val entries = entryRepository.getEntriesForHabit(habitId)
             val streak = StatsCalculator.calculateStreak(entries)
-            Log.d("StatsManager", "entries: $entries")
 
 
             val updatedHabit = habit.copy(
@@ -39,7 +37,6 @@ class StatsManager(
                 currentStreak = streak,
                 highestStreak = maxOf(habit.highestStreak, streak),
             )
-            Log.d("StatsManager", "$updatedHabit")
             habitRepository.updateHabit(updatedHabit)
         }
 
@@ -53,7 +50,6 @@ class StatsManager(
                 totalHabitsTracked = allUserHabits.size,
             )
         )
-        Log.d("StatsManager", "$updatedUser")
 
         userRepository.updateUser(updatedUser)
     }
@@ -67,7 +63,6 @@ class StatsManager(
                 totalEntriesLogged = entries.size,
             )
         )
-        Log.d("StatsManager", "Updating user stats for $userId: ${updatedUser.metrics.totalEntriesLogged} entries logged")
 
         userRepository.updateUser(updatedUser)
 

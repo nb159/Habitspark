@@ -138,12 +138,10 @@ fun habitHeader(habit: HabitModel) {
 
     val progressPercentage = when (habit.goalType) {
         GoalType.HOURS -> {
-            Log.d("HabitDetails", "Total Minutes: ${habit.totalMinutes}, Goal Target: ${habit.goalTarget}")
             ((habit.totalMinutes.toDouble() / 60) / habit.goalTarget.toDouble()) * 100
         }
         GoalType.REPETITIONS -> (habit.totalEntries.toDouble() / habit.goalTarget).coerceAtMost(1.0) * 100
     }
-    Log.d("HabitDetails", "Progress: $progressText, Percentage: $progressPercentage")
 
     Card(
         modifier = Modifier
