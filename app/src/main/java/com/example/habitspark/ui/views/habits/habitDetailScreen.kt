@@ -1,10 +1,12 @@
 package com.example.habitspark.ui.views.habits
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -71,6 +73,7 @@ fun habitDetailsScreen(
 
     val coroutineScope = rememberCoroutineScope()
 
+    var selectedView by remember { mutableStateOf("Entries") }
 
     LaunchedEffect(habitId) {
         entryViewModel.fetchEntriesForHabit(habitId)
@@ -81,6 +84,7 @@ fun habitDetailsScreen(
 
     Scaffold(
         floatingActionButton = {
+            if (selectedView != "Entries") return@Scaffold
             FloatingActionButton(
                 onClick = {showDialog = true},
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -98,15 +102,15 @@ fun habitDetailsScreen(
                 .padding(16.dp),
         ) {
             habit?.let {  habitHeader(it) }
-            Spacer(modifier = Modifier.height(30.dp))
-            entries?.let {
-                entryList(
-                    it,
-                    onEntryDelete = { entry: EntryModel ->
-                        entryViewModel.deleteEntry(entry)
-                    }
-                )
+            ViewSwitcher(selectedView = selectedView, onViewChange = { selectedView = it })
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (selectedView == "Entries") {
+                entryList(entries, onEntryDelete = { entry -> entryViewModel.deleteEntry(entry) })
+            } else {
+                habitStatistics(habit)
             }
+
             if (showDialog) {
                 addEntryDialog(
                     userId = userId,
@@ -205,6 +209,47 @@ fun IconRow(@DrawableRes iconRes: Int, value: String, tint: Color = Color.Unspec
             style = MaterialTheme.typography.bodyMedium,
             color = PrimaryText
         )
+    }
+}
+
+@Composable
+fun ViewSwitcher(
+    selectedView: String,
+    onViewChange: (String) -> Unit
+) {
+    val options = listOf("Entries", "Statistics")
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        options.forEach { label ->
+            val isSelected = selectedView == label
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .clickable { onViewChange(label) }
+                    .padding(vertical = 6.dp, horizontal = 12.dp)
+            ) {
+                Text(
+                    text = label,
+                    color = if (isSelected) Color.White else SecondaryText,
+                    style = if (isSelected)
+                        MaterialTheme.typography.bodyMedium
+                    else
+                        MaterialTheme.typography.bodySmall
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Box(
+                    modifier = Modifier
+                        .height(2.dp)
+                        .width(24.dp)
+                        .background(if (isSelected) Color.White else Color.Transparent)
+                )
+            }
+        }
     }
 }
 
@@ -332,4 +377,39 @@ fun entryItem(entry: EntryModel, onEntryDelete: (entry: EntryModel) -> Unit = {}
                 }
             }
         }
+}
+
+@Composable
+fun habitStatistics(habit: HabitModel?) {
+    if (habit == null) return
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "Statistics",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        // Example statistics, replace with actual calculations
+        Text(
+            text = "Total Entries: ${habit.totalEntries}",
+            style = MaterialTheme.typography.bodyMedium,
+            color = PrimaryText
+        )
+        Text(
+            text = "Average Duration: ${minutesToHoursMinutes(habit.totalMinutes / habit.totalEntries)} hrs",
+            style = MaterialTheme.typography.bodyMedium,
+            color = PrimaryText
+        )
+        Text(
+            text = "Current Streak: ${habit.currentStreak} days",
+            style = MaterialTheme.typography.bodyMedium,
+            color = PrimaryText
+        )
+    }
 }
