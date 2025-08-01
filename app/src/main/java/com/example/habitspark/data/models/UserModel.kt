@@ -13,15 +13,17 @@ data class UserModel(
     val xp: Int = 0,
     val primaryType: String = "",
     val secondaryType: String = "",
-    val achievements: List<String> = emptyList(),
-    val currency: Int = 0,
-    val habits: List<String> = emptyList(),
+    val achievements: Map<String, Timestamp> = emptyMap(),
+    val coin: Int = 0,
     val metrics: Metrics = Metrics(),
     val createdDate: Timestamp = Timestamp.now(),
 )
 
 data class Metrics(
-    val totalHabitsTracked: Int = 0,
+    val streak: Int = 0,
     val totalEntriesLogged: Int = 0,
-    val streak: Int = 0
+    val totalHabitsTracked: Int = 0,
+    val totalMinutesSpent: Int = 0,
+    val moodAverage: Int = 0,
+    val difficultyAverage: Int = 0,
 )

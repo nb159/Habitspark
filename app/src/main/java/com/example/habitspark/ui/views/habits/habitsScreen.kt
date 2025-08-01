@@ -220,7 +220,7 @@ fun userHeader(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "${userModel.currency}",
+                            text = "${userModel.coin}",
                             color = PrimaryText,
                             style = MaterialTheme.typography.bodyMedium
                         )
