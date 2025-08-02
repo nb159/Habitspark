@@ -1,7 +1,7 @@
 package com.example.habitspark.ui.views.habits
 
-import android.annotation.SuppressLint
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -48,12 +48,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.habitspark.R
 import com.example.habitspark.data.models.HabitModel
-import com.example.habitspark.data.models.Metrics
 import com.example.habitspark.data.models.Mood
 import com.example.habitspark.data.models.UserModel
 import com.example.habitspark.ui.theme.BackgroundColor
@@ -279,7 +277,7 @@ fun habitList(
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(habits) { habit ->
+        items(habits, key = { it.id }) { habit ->
             habitItem(habit = habit, onHabitClick, onHabitDelete, onAddEntryClicked)
         }
     }

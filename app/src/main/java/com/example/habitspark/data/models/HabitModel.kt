@@ -10,7 +10,7 @@ data class HabitModel(
     val description: String = "",
     val goalType: GoalType = GoalType.HOURS, // "hours" | "count" | "completion"
     val goalTarget: Int = 0,
-    val createdAt: Timestamp = Timestamp.now(), // <-- important change
+    val createdAt: Timestamp = Timestamp.now(),
     val totalEntries: Int = 0,
     val totalMinutes: Int = 0,
     val currentStreak: Int = 0,

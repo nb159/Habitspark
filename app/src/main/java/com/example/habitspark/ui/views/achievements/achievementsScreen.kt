@@ -62,7 +62,6 @@ fun achievementsScreen(
          achievementViewModel.fetchAchievements()
          userViewModel.getUserById(userId)
      }
-    Log.d("AchievementsScreen", "UserId: ${userId}, user: $user")
 
     val sortedAchievements = achievements.sortedWith(
         compareBy<AchievementModel> { achievement ->
@@ -91,8 +90,8 @@ fun achievementList(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(achievements) { achievement ->
-            val currentProgress = getUserProgress(achievement, user)
             val isUnlocked  = user.achievements.containsKey(achievement.id)
+            val currentProgress = if (isUnlocked) achievement.goal else getUserProgress(achievement, user)
 
             val formatter = SimpleDateFormat("MMM d, hh:mm a", Locale.getDefault())
             val unlockedAt = user.achievements[achievement.id]?.let {
@@ -117,6 +116,7 @@ fun achievementItem(
     unlockedAt: String? = null
 ) {
     val progressPercent = (currentProgress.toFloat() / achievement.goal).coerceIn(0f, 1f)
+
 
     Card(
         modifier = Modifier

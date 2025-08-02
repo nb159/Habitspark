@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 class AchievementViewModel(
-    private val achievementRepository: AchievementRepository = AchievementRepository(Firebase.firestore)
 ): ViewModel() {
 
     private val _achievements = mutableStateListOf<AchievementModel>()
@@ -29,7 +28,7 @@ class AchievementViewModel(
     suspend fun fetchAchievements() {
         _isLoading.value = true
         try {
-            val results = achievementRepository.fetchAchievements()
+            val results = AchievementRepository.fetchAchievements()
             _achievements.clear()
             _achievements.addAll(results)
         } catch (e: Exception) {

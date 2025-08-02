@@ -26,7 +26,6 @@ class StatsManager(
     private val habitRepository: HabitRepository = HabitRepository(Firebase.firestore),
     private val entryRepository: EntryRepository = EntryRepository(Firebase.firestore),
     private val userRepository: UserRepository = UserRepository(Firebase.firestore),
-    private val achievementsRepository: AchievementRepository = AchievementRepository(Firebase.firestore)
 ) {
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun updateStatsFromEntry(habitId: String, userIdOverride: String? = null) = withContext(Dispatchers.IO) {
@@ -73,7 +72,7 @@ class StatsManager(
         entries: List<EntryModel>
     ) {
         val unlockedUserAchievements = user.achievements.keys
-        val achievements = achievementsRepository.fetchAchievements()
+        val achievements = AchievementRepository.fetchAchievements()
 
 
         val newAchievements = achievements.filter {
