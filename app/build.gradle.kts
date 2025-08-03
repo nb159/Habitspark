@@ -88,6 +88,9 @@ dependencies {
     //flowRow
     implementation ("com.google.accompanist:accompanist-flowlayout:0.30.1")
 
+    //Charts
+    implementation ("io.github.ehsannarmani:compose-charts:0.1.7")
+
 
 
 

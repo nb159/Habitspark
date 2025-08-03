@@ -3,7 +3,7 @@ package com.example.habitspark.ui.theme
 import androidx.compose.ui.graphics.Color
 
 
-// Starry Night Inspired (used in image you liked)
+// Starry Night Inspired
 val MidnightNavy       = Color(0xFF0E0E2C) // App background
 val DeepSlateBlue      = Color(0xFF1F1F3C) // Card surface
 val SoftIndigo         = Color(0xFF6C5DD3) // Buttons / Accents

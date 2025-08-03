@@ -1,6 +1,7 @@
 package com.example.habitspark.ui.views.habits
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -53,12 +54,17 @@ import com.example.habitspark.data.models.DifficultyLevel
 import com.example.habitspark.data.models.EntryModel
 import com.example.habitspark.data.models.HabitModel
 import com.example.habitspark.data.models.Mood
+import com.example.habitspark.ui.components.charts.BarChart
 import com.example.habitspark.ui.theme.PrimaryText
 import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.theme.SurfaceColor
 import com.example.habitspark.utils.minutesToDecimalHours
 import com.example.habitspark.utils.minutesToHoursMinutes
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.TextStyle
+import java.util.Locale
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -108,7 +114,7 @@ fun habitDetailsScreen(
             if (selectedView == "Entries") {
                 entryList(entries, onEntryDelete = { entry -> entryViewModel.deleteEntry(entry) })
             } else {
-                habitStatistics(habit)
+                habitStatistics(habit, entries)
             }
 
             if (showDialog) {
@@ -262,7 +268,6 @@ fun entryList(entries: List<EntryModel>, onEntryDelete: (entry: EntryModel) -> U
                 .fillMaxSize()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-//            verticalArrangement = Arrangement.Center
         ) {
             Spacer(modifier = Modifier.weight(0.3f)) // Pushes content slightly down
             Text(
@@ -296,7 +301,7 @@ fun entryItem(entry: EntryModel, onEntryDelete: (entry: EntryModel) -> Unit = {}
 
     val formattedTimestamp = remember(entry.createdDate) {
         // Format: Jul 19, 10:45 AM
-        val sdf = java.text.SimpleDateFormat("MMM dd, h:mm a", java.util.Locale.getDefault())
+        val sdf = java.text.SimpleDateFormat("MMM dd, h:mm a", Locale.getDefault())
         sdf.format(entry.createdDate.toDate())
     }
         Card(
@@ -379,37 +384,59 @@ fun entryItem(entry: EntryModel, onEntryDelete: (entry: EntryModel) -> Unit = {}
         }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun habitStatistics(habit: HabitModel?) {
+fun habitStatistics(habit: HabitModel?, entries: List<EntryModel>) {
     if (habit == null) return
+
+    val maxMinutes = entries.maxOfOrNull { it.minutesSpent } ?: 0
+
+    val dailyMinutes: List<Pair<String, List<Int>>> = (0..6).map { daysAgo ->
+        val date = LocalDate.now().minusDays((6 - daysAgo).toLong()) // oldest to newest
+        val label = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()) // "Mon", "Tue", etc.
+
+        val filteredEntries = entries.filter {
+            it.createdDate.toDate().toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate() == date
+        }
+
+        val minutes = filteredEntries.map { it.minutesSpent }
+
+        label to minutes
+    }
+
+    Log.d("HabitStatistics", "Daily Minutes: $dailyMinutes")
+
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            text = "Statistics",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
 
-        // Example statistics, replace with actual calculations
-        Text(
-            text = "Total Entries: ${habit.totalEntries}",
-            style = MaterialTheme.typography.bodyMedium,
-            color = PrimaryText
-        )
-        Text(
-            text = "Average Duration: ${minutesToHoursMinutes(habit.totalMinutes / habit.totalEntries)} hrs",
-            style = MaterialTheme.typography.bodyMedium,
-            color = PrimaryText
-        )
-        Text(
-            text = "Current Streak: ${habit.currentStreak} days",
-            style = MaterialTheme.typography.bodyMedium,
-            color = PrimaryText
-        )
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 80.dp),
+            colors = CardDefaults.cardColors(containerColor = SurfaceColor),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(6.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
+            ) {
+                BarChart(
+                    "Weekly Habit Activity in Minutes",
+                    dailyMinutes,
+                    4,
+                    yAxisMaxMinValues = Pair((maxMinutes+20).toDouble(), 0.0)
+                )
+            }
+        }
     }
 }

@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -70,8 +69,6 @@ import com.example.habitspark.ui.views.achievements.achievementsScreen
 import com.example.habitspark.ui.views.habits.habitDetailsScreen
 import com.example.habitspark.ui.views.habits.habitsScreen
 import com.example.habitspark.ui.views.user.UserViewModel
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -192,7 +189,7 @@ class MainActivity : ComponentActivity() {
                                             Text(
                                                 text = " / ${getScreenLabel(currentBackStackEntry?.destination?.route)}",
                                                 style = MaterialTheme.typography.bodySmall,
-                                                color = PrimaryText,
+                                                color = SecondaryText,
                                                 modifier = Modifier
                                                     .padding(start = 5.dp)
                                                     .alignBy(LastBaseline) // pushes this text to bottom-align with the baseline

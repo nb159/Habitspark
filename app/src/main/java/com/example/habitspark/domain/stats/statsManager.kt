@@ -20,7 +20,6 @@ import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.util.Locale.filter
 
 class StatsManager(
     private val habitRepository: HabitRepository = HabitRepository(Firebase.firestore),
@@ -105,7 +104,6 @@ class StatsManager(
         }
 
     }
-
     private fun isAchievementCompleted(
         achievement: AchievementModel,
         user: UserModel,
