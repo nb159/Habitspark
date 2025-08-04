@@ -1,8 +1,6 @@
 package com.example.habitspark.ui.views.habits
 
 import android.os.Build
-import android.util.Log
-import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,6 +24,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,7 +41,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -60,6 +58,8 @@ import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.theme.SurfaceColor
 import com.example.habitspark.utils.minutesToDecimalHours
 import com.example.habitspark.utils.minutesToHoursMinutes
+import com.example.habitspark.utils.textIconValue
+import ir.ehsannarmani.compose_charts.extensions.format
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
@@ -152,6 +152,9 @@ fun habitHeader(habit: HabitModel) {
         }
         GoalType.REPETITIONS -> (habit.totalEntries.toDouble() / habit.goalTarget).coerceAtMost(1.0) * 100
     }
+    val completed =
+        habit.totalMinutes >= habit.goalTarget * 60 ||
+        habit.totalEntries >= habit.goalTarget
 
     Card(
         modifier = Modifier
@@ -185,36 +188,22 @@ fun habitHeader(habit: HabitModel) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    IconRow(iconRes = R.drawable.target, value = progressText, Color.White)  // goal
-                    IconRow(iconRes = R.drawable.progress, value = "${progressPercentage.toInt()}%", Color.White)  // progress
+                    textIconValue(
+                        iconRes = R.drawable.target,
+                        tint = if (completed) Color.Green else Color.White,
+                        value = progressText,
+                        valueColor = if (completed) Color.Green else PrimaryText)
+                    textIconValue(iconRes = R.drawable.progress, tint = Color.White, value = "${progressPercentage.toInt()}%")
                 }
 
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    IconRow(iconRes = R.drawable.clock, value = "${minutesToHoursMinutes(habit.totalMinutes)} hrs", Color.White)  // time
-                    IconRow(iconRes = R.drawable.streak, value = "${habit.currentStreak} days")  // streak
+                    textIconValue(iconRes = R.drawable.clock, tint = Color.White, value = "${minutesToHoursMinutes(habit.totalMinutes)} hrs")
+                    textIconValue(iconRes = R.drawable.streak, value = "${habit.currentStreak} days")
                 }
             }
         }
-    }
-}
-
-@Composable
-fun IconRow(@DrawableRes iconRes: Int, value: String, tint: Color = Color.Unspecified) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            painter = painterResource(id = iconRes),
-            contentDescription = null,
-            tint = tint,
-            modifier = Modifier.size(18.dp)
-        )
-        Spacer(modifier = Modifier.width(6.dp))
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = PrimaryText
-        )
     }
 }
 
@@ -389,11 +378,10 @@ fun entryItem(entry: EntryModel, onEntryDelete: (entry: EntryModel) -> Unit = {}
 fun habitStatistics(habit: HabitModel?, entries: List<EntryModel>) {
     if (habit == null) return
 
-    val maxMinutes = entries.maxOfOrNull { it.minutesSpent } ?: 0
 
     val dailyMinutes: List<Pair<String, List<Int>>> = (0..6).map { daysAgo ->
-        val date = LocalDate.now().minusDays((6 - daysAgo).toLong()) // oldest to newest
-        val label = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()) // "Mon", "Tue", etc.
+        val date = LocalDate.now().minusDays((6 - daysAgo).toLong())
+        val label = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
 
         val filteredEntries = entries.filter {
             it.createdDate.toDate().toInstant()
@@ -401,13 +389,13 @@ fun habitStatistics(habit: HabitModel?, entries: List<EntryModel>) {
                 .toLocalDate() == date
         }
 
-        val minutes = filteredEntries.map { it.minutesSpent }
+        val totalMinutes = filteredEntries.sumOf { it.minutesSpent }
 
-        label to minutes
+        label to listOf(totalMinutes)
     }
+    val maxMinutes = dailyMinutes.maxOfOrNull { it.second.firstOrNull() ?: 0 } ?: 0
 
-    Log.d("HabitStatistics", "Daily Minutes: $dailyMinutes")
-
+    val averageDifficulty = DifficultyLevel.fromValue(habit.difficultyRatingAverage.toInt())
 
     Column(
         modifier = Modifier
@@ -415,7 +403,54 @@ fun habitStatistics(habit: HabitModel?, entries: List<EntryModel>) {
             .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            textIconValue(
+                text = "Highest ",
+                iconRes = R.drawable.streak,
+                contentDescription = "Highest Streak",
+                value = ": ${habit.highestStreak} Days",
+                tint = Color.Unspecified
+            )
+            textIconValue(
+                text = "Average ",
+                iconRes = R.drawable.clock,
+                contentDescription = "Average Session in Minutes",
+                value = ": ${habit.averageSessionMinutes.format(1)} Minutes",
+                tint = Color.White
+            )
 
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            textIconValue(
+                text = "Average Mood: ",
+                contentDescription = "Average Mood",
+                value = Mood.fromValue(habit.entryMoodAverage)?.emoji ?: "N/A",
+            )
+
+            textIconValue(
+                text = "Average Difficulty: ",
+                contentDescription = "Average Mood",
+                value = averageDifficulty?.label ?: "N/A",
+                valueColor = averageDifficulty?.color ?: PrimaryText
+            )
+
+
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+        Divider(
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+            thickness = 1.dp
+        )
+        Spacer(modifier = Modifier.height(6.dp))
 
         Card(
             modifier = Modifier

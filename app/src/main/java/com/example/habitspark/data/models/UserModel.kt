@@ -24,6 +24,6 @@ data class Metrics(
     val totalEntriesLogged: Int = 0,
     val totalHabitsTracked: Int = 0,
     val totalMinutesSpent: Int = 0,
-    val moodAverage: Int = 0,
-    val difficultyAverage: Int = 0,
+    val moodAverage: Float = 0f,
+    val difficultyAverage: Float = 0f,
 )

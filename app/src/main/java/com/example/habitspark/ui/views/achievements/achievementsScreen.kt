@@ -1,6 +1,5 @@
 package com.example.habitspark.ui.views.achievements
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,7 +18,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -33,7 +31,6 @@ import com.example.habitspark.ui.theme.PrimaryText
 import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.theme.SurfaceColor
 import com.example.habitspark.ui.views.user.UserViewModel
-import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -149,14 +146,14 @@ fun achievementItem(
                     .fillMaxWidth()
                     .height(6.dp)
                     .clip(RoundedCornerShape(3.dp)),
-                color = if (isUnlocked) Color.Gray else PrimaryAccent,
+                color = if (isUnlocked) Color.Green.copy(alpha = 0.5f) else PrimaryAccent,
                 trackColor = SurfaceColor
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "$currentProgress / ${achievement.goal} • ${achievement.reward} XP • ${unlockedAt.let {it}}",
+                text = "$currentProgress / ${achievement.goal} • ${achievement.reward} XP • ${unlockedAt.let {it ?: ""}}",
                 style = MaterialTheme.typography.labelSmall,
                 color = SecondaryText
             )
@@ -170,7 +167,7 @@ fun getUserProgress(achievement: AchievementModel, user: UserModel): Int {
         AchievementType.ENTRY_COUNT     -> user.metrics.totalEntriesLogged
         AchievementType.STREAK          -> user.metrics.streak
         AchievementType.TIME_SPENT      -> user.metrics.totalMinutesSpent
-        AchievementType.MOOD            -> user.metrics.moodAverage
-        AchievementType.DIFFICULTY      -> user.metrics.difficultyAverage
+        AchievementType.MOOD            -> user.metrics.moodAverage.toInt()
+        AchievementType.DIFFICULTY      -> user.metrics.difficultyAverage.toInt()
     }
 }

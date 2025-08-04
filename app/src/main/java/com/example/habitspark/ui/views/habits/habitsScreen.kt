@@ -1,7 +1,6 @@
 package com.example.habitspark.ui.views.habits
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -47,7 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.habitspark.R
@@ -61,6 +60,7 @@ import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.theme.SurfaceColor
 import com.example.habitspark.ui.views.user.UserViewModel
 import com.example.habitspark.utils.minutesToHoursMinutes
+import com.example.habitspark.utils.textIconValue
 import kotlinx.coroutines.launch
 
 
@@ -209,50 +209,26 @@ fun userHeader(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalAlignment = Alignment.Start
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.coin_stack),
-                            contentDescription = "Currency",
-                            tint = Color.Unspecified,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "${userModel.coin}",
-                            color = PrimaryText,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
+                    textIconValue(
+                        iconRes = R.drawable.coin_stack,
+                        contentDescription = "Currency",
+                        size = 18.dp,
+                        value = "${userModel.coin}",
+                    )
+                    textIconValue(
+                        iconRes = R.drawable.streak,
+                        contentDescription = "Streak",
+                        size = 18.dp,
+                        value = "${userModel.metrics.streak} Days",
+                    )
+                    textIconValue(
+                        iconRes = R.drawable.clock,
+                        contentDescription = "Total Hours",
+                        tint = Color.White,
+                        size = 18.dp,
+                        value = "$totalHoursOnHabits hrs",
+                    )
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.streak),
-                            contentDescription = "Streak",
-                            tint = Color.Unspecified,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "${userModel.metrics.streak} Days",
-                            color = PrimaryText,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.clock),
-                            contentDescription = "Total Hours",
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "$totalHoursOnHabits hrs",
-                            color = PrimaryText,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
                 }
             }
         }
@@ -386,7 +362,10 @@ fun habitItem(
                         Spacer(modifier = Modifier.height(4.dp))
 
                         Text(
-                            text = "$totalHabitHours hrs • Mood: ${Mood.fromValue(habit.entryMoodAverage)?.emoji}",
+                            text = buildAnnotatedString {
+                                append("$totalHabitHours hrs • ")
+                                append("Avg. Mood: ${Mood.fromValue(habit.entryMoodAverage)?.emoji ?: "N/A"}")
+                            },
                             color = SecondaryText,
                             style = MaterialTheme.typography.bodySmall
                         )

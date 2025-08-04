@@ -57,6 +57,9 @@ class StatsManager(
                 streak = StatsCalculator.calculateStreak(allUserEntries),
                 totalEntriesLogged = allUserEntries.size,
                 totalHabitsTracked = allUserHabits.size,
+                difficultyAverage = StatsCalculator.calculateAverageDifficulty(allUserEntries),
+                moodAverage = StatsCalculator.calculateAverageMood(allUserEntries),
+                totalMinutesSpent = StatsCalculator.calculateTotalMinutes(allUserEntries)
             )
         )
 
