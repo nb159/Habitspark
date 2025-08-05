@@ -2,6 +2,9 @@ package com.example.habitspark.ui.views.habits
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +32,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismiss
@@ -47,20 +51,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.habitspark.R
 import com.example.habitspark.data.models.HabitModel
 import com.example.habitspark.data.models.Mood
 import com.example.habitspark.data.models.UserModel
+import com.example.habitspark.ui.events.StatsEvent
+import com.example.habitspark.ui.events.StatsEventBus
 import com.example.habitspark.ui.theme.BackgroundColor
 import com.example.habitspark.ui.theme.PrimaryAccent
 import com.example.habitspark.ui.theme.PrimaryText
 import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.theme.SurfaceColor
 import com.example.habitspark.ui.views.user.UserViewModel
+import com.example.habitspark.utils.calculateLevelFromXP
 import com.example.habitspark.utils.minutesToHoursMinutes
 import com.example.habitspark.utils.textIconValue
+import com.example.habitspark.utils.xpForNextLevel
 import kotlinx.coroutines.launch
 
 
@@ -87,6 +97,12 @@ fun habitsScreen(
     LaunchedEffect(Unit) {
         habitViewModel.fetchHabits(userId)
         userViewModel.getUserById(userId)
+
+        StatsEventBus.events.collect { event ->
+            if (event is StatsEvent.UserDataChanged) {
+                userViewModel.getUserById(userId)
+            }
+        }
     }
 
     var showHabitDialog by remember { mutableStateOf(false) }
@@ -110,7 +126,7 @@ fun habitsScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            user?.let { userHeader(userModel = it, totalHabitHours = habits.sumOf { it.totalMinutes }) }
+            user?.let { compactUserHeader(user = it) }
 
             Spacer(modifier = Modifier.height(30.dp))
 
@@ -155,11 +171,9 @@ fun habitsScreen(
 }
 
 @Composable
-fun userHeader(
-    userModel: UserModel,
-    totalHabitHours: Int?
+fun compactUserHeader(
+    user: UserModel
 ) {
-    val totalHoursOnHabits = totalHabitHours?.let { minutesToHoursMinutes(it) } ?: "0:00"
 
     Card(
         modifier = Modifier
@@ -171,67 +185,116 @@ fun userHeader(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
-            // Avatar box
-            Box(
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
-                    .size(64.dp)
-                    .background(PrimaryAccent, shape = RoundedCornerShape(12.dp))
-            )
+                    .weight(0.7f)
 
-            Spacer(modifier = Modifier.width(16.dp))
-
-            // Main information split into 2 columns
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = userModel.name,
-                        color = PrimaryText,
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                Text(
+                    text = "Welcome Back",
+                    color = SecondaryText,
+                    style = MaterialTheme.typography.titleSmall.copy(fontStyle = FontStyle.Italic, fontWeight = FontWeight.Light)
+                )
+                Text(
+                    text = user.name,
+                    color = PrimaryText,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                userLevelAndProgressBar(user.xp)
 
-                    Text(
-                        text = "Level ${userModel.level} • ${userModel.xp} XP",
-                        color = SecondaryText,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
+            }
 
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    horizontalAlignment = Alignment.Start
-                ) {
-                    textIconValue(
-                        iconRes = R.drawable.coin_stack,
-                        contentDescription = "Currency",
-                        size = 18.dp,
-                        value = "${userModel.coin}",
-                    )
-                    textIconValue(
-                        iconRes = R.drawable.streak,
-                        contentDescription = "Streak",
-                        size = 18.dp,
-                        value = "${userModel.metrics.streak} Days",
-                    )
-                    textIconValue(
-                        iconRes = R.drawable.clock,
-                        contentDescription = "Total Hours",
-                        tint = Color.White,
-                        size = 18.dp,
-                        value = "$totalHoursOnHabits hrs",
-                    )
+            Spacer(modifier = Modifier.width(60.dp))
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.Start,
+                modifier = Modifier.weight(0.3f)
+            ) {
+                textIconValue(
+                    iconRes = R.drawable.coin_stack,
+                    contentDescription = "Currency",
+                    size = 18.dp,
+                    value = "${user.coin}",
+                )
+                textIconValue(
+                    iconRes = R.drawable.streak,
+                    contentDescription = "Streak",
+                    size = 18.dp,
+                    value = "${user.metrics.streak} Days",
+                )
+                textIconValue(
+                    iconRes = R.drawable.clock,
+                    contentDescription = "Total Hours",
+                    tint = Color.White,
+                    size = 18.dp,
+                    value = "${minutesToHoursMinutes(user.metrics.totalMinutesSpent)} hrs",
+                )
 
-                }
             }
         }
+    }
+}
+
+@Composable
+fun userLevelAndProgressBar(
+    xp: Int
+) {
+    /**
+     * Calculates the user's level based on their total XP.
+     * eg. Current level 7 with 800 XP
+     * xpforNextLevel(7) = 840 => total XP needed to get to level 8
+     * xpforNextLevel(6) = 660 => total XP needed to get to level 7
+     */
+    val userLevel = calculateLevelFromXP(xp)
+    val xpForNextLevel = xpForNextLevel(userLevel) //total xp needed to get to next level
+    val xpForPreviousLevel = xpForNextLevel(userLevel - 1) //total xp needed to get to current level eg.
+    val TotalXpBetweenLevel = xpForNextLevel - xpForPreviousLevel //total xp needed to get to next level from current level
+
+    val xpRemainingForNextLevel = xp - xpForPreviousLevel //xp remaining to get to next level
+
+    val normalizedProgress = xpRemainingForNextLevel.toFloat() / TotalXpBetweenLevel.toFloat()
+
+    val animatedProgress by animateFloatAsState(
+        targetValue = normalizedProgress.coerceIn(0f, 1f),
+        animationSpec = tween(
+            durationMillis = 600,
+            easing = FastOutSlowInEasing
+        ), label = ""
+    )
+
+    Text(
+        text = "Level $userLevel • $xp XP",
+        color = SecondaryText,
+        style = MaterialTheme.typography.bodySmall
+    )
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        LinearProgressIndicator(
+            progress = animatedProgress,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(RoundedCornerShape(3.dp)),
+            color = Color.Green.copy(alpha = 0.5f),
+            trackColor = SurfaceColor
+        )
+
+        Text(
+            text = "$xpForNextLevel XP",
+            color = SecondaryText,
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier
+                .align(Alignment.End) // aligns under the end of the progress bar
+                .padding(top = 2.dp)
+        )
     }
 }
 

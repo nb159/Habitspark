@@ -13,6 +13,7 @@ import com.example.habitspark.data.repository.AchievementRepository
 import com.example.habitspark.data.repository.EntryRepository
 import com.example.habitspark.data.repository.HabitRepository
 import com.example.habitspark.data.repository.UserRepository
+import com.example.habitspark.ui.events.StatsEvent
 import com.example.habitspark.ui.events.StatsEventBus
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
@@ -102,7 +103,9 @@ class StatsManager(
                     RewardType.XP -> "${it.reward} XP"
                     RewardType.COINS -> "${it.reward} coins"
                 }
-                StatsEventBus.emit("🎉 New Achievement: ${it.title} • $rewardMessage")
+                StatsEventBus.emit(StatsEvent.AchievementUnlocked("🎉 New Achievement: ${it.title} • $rewardMessage"))
+                StatsEventBus.emit(StatsEvent.UserDataChanged)
+
             }
         }
 

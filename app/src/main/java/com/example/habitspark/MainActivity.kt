@@ -59,6 +59,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.habitspark.data.repository.UserPreferencesManager
+import com.example.habitspark.ui.events.StatsEvent
 import com.example.habitspark.ui.events.StatsEventBus
 import com.example.habitspark.ui.theme.BackgroundColor
 import com.example.habitspark.ui.theme.HabitSparkTheme
@@ -68,6 +69,7 @@ import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.views.achievements.achievementsScreen
 import com.example.habitspark.ui.views.habits.habitDetailsScreen
 import com.example.habitspark.ui.views.habits.habitsScreen
+import com.example.habitspark.ui.views.profile.profileScreen
 import com.example.habitspark.ui.views.user.UserViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -153,8 +155,10 @@ class MainActivity : ComponentActivity() {
 
                     val snackbarHostState  = remember { SnackbarHostState() }
                     LaunchedEffect(Unit) {
-                        StatsEventBus.events.collect { message ->
-                            snackbarHostState.showSnackbar(message)
+                        StatsEventBus.events.collect { event ->
+                            if (event is StatsEvent.AchievementUnlocked) {
+                                snackbarHostState.showSnackbar(event.message)
+                            }
                         }
                     }
 
@@ -214,7 +218,7 @@ class MainActivity : ComponentActivity() {
                         ) { innerPadding ->
                             NavHost(
                                 navController = navController,
-                                startDestination = Screen.Habits.route,
+                                startDestination = Screen.Profile.route,
                                 modifier = Modifier.padding(innerPadding)
                             ) {
                                 composable(Screen.Habits.route) {
@@ -234,6 +238,9 @@ class MainActivity : ComponentActivity() {
                                     achievementsScreen(
                                         userId = user!!.id,
                                     )
+                                }
+                                composable(Screen.Profile.route) {
+                                    profileScreen(userId = user!!.id,)
                                 }
                             }
                         }
@@ -278,9 +285,9 @@ fun DrawerContent(
                 modifier = Modifier.padding(bottom = 75.dp)
             )
 
+            DrawerItem("Account", Screen.Profile.route, currentRoute, onDestinationClicked)
             DrawerItem("Habits", Screen.Habits.route, currentRoute, onDestinationClicked)
             DrawerItem("Achievements", Screen.Achievements.route, currentRoute, onDestinationClicked)
-            DrawerItem("Account", "account", currentRoute, onDestinationClicked)
 
             Spacer(modifier = Modifier.weight(1f))
 
@@ -366,12 +373,14 @@ sealed class Screen(val route: String, val label: String = "") {
         fun createRoute(habitId: String, userId: String) = "habitDetail/$habitId/$userId"
     }
     object Achievements : Screen("achievements", "Achievements")
+    object Profile: Screen("profile", "Profile")
 }
 fun getScreenLabel(route: String?): String {
     return when {
         route?.startsWith("habitDetail") == true -> Screen.HabitDetail.label
         route == Screen.Habits.route -> Screen.Habits.label
         route == Screen.Achievements.route -> Screen.Achievements.label
+        route == Screen.Profile.route -> Screen.Profile.label
         else -> "Home"
     }
 }

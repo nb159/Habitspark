@@ -52,7 +52,7 @@ import com.example.habitspark.data.models.DifficultyLevel
 import com.example.habitspark.data.models.EntryModel
 import com.example.habitspark.data.models.HabitModel
 import com.example.habitspark.data.models.Mood
-import com.example.habitspark.ui.components.charts.BarChart
+import com.example.habitspark.ui.components.charts.barChart
 import com.example.habitspark.ui.theme.PrimaryText
 import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.theme.SurfaceColor
@@ -465,7 +465,7 @@ fun habitStatistics(habit: HabitModel?, entries: List<EntryModel>) {
                     .fillMaxWidth()
                     .padding(10.dp),
             ) {
-                BarChart(
+                barChart(
                     "Weekly Habit Activity in Minutes",
                     dailyMinutes,
                     4,
