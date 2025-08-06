@@ -34,11 +34,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.habitspark.data.dataTypes.PlayerType
 
 
 data class PlayerTypeResult(
-    val primaryType: String,
-    val secondaryType: String
+    val primaryType: PlayerType,
+    val secondaryType: PlayerType
 )
 
 
@@ -104,15 +105,17 @@ fun playerTypeQuestionnaireScreen(
                 if (currentIndex + 3 < allQuestions.size) {
                     currentIndex += 3
                 } else {
-                    val typeAverages = answersByType.mapValues { entry ->
-                        val scores = entry.value
-                        if (scores.isNotEmpty()) scores.sum() / scores.size else 0
-                    }
-
+                    val typeAverages = answersByType.mapKeys { (key, _) ->
+                        PlayerType.fromNameOrNull(key) // This gives you the enum from name
+                    }.filterKeys { it != null } // Remove nulls just in case
+                        .mapKeys { it.key!! }    // Safe to unwrap now
+                        .mapValues { (_, scores) ->
+                            if (scores.isNotEmpty()) scores.sum() / scores.size else 0
+                        }
                     val sorted = typeAverages.entries.sortedByDescending { it.value }
-
                     val primary = sorted.getOrNull(0)?.key
                     val secondary = sorted.getOrNull(1)?.key
+
 
                     if (primary != null && secondary != null) {
                         onNext(PlayerTypeResult(primaryType = primary, secondaryType = secondary))
@@ -141,7 +144,7 @@ fun playerTypeQuestionnaireScreen(
     }
 }
 
-    @Composable
+@Composable
 fun QuestionCard(
     item: QuestionItem,
     onAnswerSelected: (String, Int) -> Unit

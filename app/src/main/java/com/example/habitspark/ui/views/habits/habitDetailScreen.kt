@@ -379,7 +379,7 @@ fun habitStatistics(habit: HabitModel?, entries: List<EntryModel>) {
     if (habit == null) return
 
 
-    val dailyMinutes: List<Pair<String, List<Int>>> = (0..6).map { daysAgo ->
+    val dailyMinutes: List<Pair<String, List<Double>>> = (0..6).map { daysAgo ->
         val date = LocalDate.now().minusDays((6 - daysAgo).toLong())
         val label = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
 
@@ -389,11 +389,11 @@ fun habitStatistics(habit: HabitModel?, entries: List<EntryModel>) {
                 .toLocalDate() == date
         }
 
-        val totalMinutes = filteredEntries.sumOf { it.minutesSpent }
+        val totalMinutes = (filteredEntries.sumOf { it.minutesSpent }).toDouble()
 
         label to listOf(totalMinutes)
     }
-    val maxMinutes = dailyMinutes.maxOfOrNull { it.second.firstOrNull() ?: 0 } ?: 0
+    val maxMinutes = dailyMinutes.maxOfOrNull { it.second.firstOrNull() ?: 0.0 } ?: 0.0
 
     val averageDifficulty = DifficultyLevel.fromValue(habit.difficultyRatingAverage.toInt())
 
@@ -469,7 +469,7 @@ fun habitStatistics(habit: HabitModel?, entries: List<EntryModel>) {
                     "Weekly Habit Activity in Minutes",
                     dailyMinutes,
                     4,
-                    yAxisMaxMinValues = Pair((maxMinutes+20).toDouble(), 0.0)
+                    yAxisMaxMinValues = Pair((maxMinutes+20), 0.0)
                 )
             }
         }

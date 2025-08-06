@@ -89,6 +89,21 @@ class EntryViewModel(
         }
     }
 
+    fun fetchEntriesByUserId(userId: String) {
+        _isLoading.value = true
+        viewModelScope.launch {
+            try {
+                val results = entryRepository.getEntriesByUserId(userId).await()
+                _entries.clear()
+                _entries.addAll(results)
+            } catch (e: Exception) {
+                _error.value = e.message
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
     fun clearError() {
         _error.value = null
     }

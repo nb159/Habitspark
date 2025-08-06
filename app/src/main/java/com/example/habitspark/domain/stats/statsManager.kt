@@ -53,14 +53,17 @@ class StatsManager(
         val allUserEntries = entryRepository.getEntriesByUserId(userId).await()
         val allUserHabits = habitRepository.getUserHabits(userId).await()
 
+        val userStreak = StatsCalculator.calculateStreak(allUserEntries)
         val updatedUser = user.copy(
             metrics = user.metrics.copy(
-                streak = StatsCalculator.calculateStreak(allUserEntries),
+                streak = userStreak,
+                highestStreak = maxOf(user.metrics.highestStreak, userStreak),
                 totalEntriesLogged = allUserEntries.size,
                 totalHabitsTracked = allUserHabits.size,
                 difficultyAverage = StatsCalculator.calculateAverageDifficulty(allUserEntries),
                 moodAverage = StatsCalculator.calculateAverageMood(allUserEntries),
-                totalMinutesSpent = StatsCalculator.calculateTotalMinutes(allUserEntries)
+                totalMinutesSpent = StatsCalculator.calculateTotalMinutes(allUserEntries),
+                averageSessionMinutes = StatsCalculator.calculateAverageSessionMinutes(allUserEntries)
             )
         )
 

@@ -21,9 +21,11 @@ data class UserModel(
 
 data class Metrics(
     val streak: Int = 0,
+    val highestStreak: Int = 0,
     val totalEntriesLogged: Int = 0,
     val totalHabitsTracked: Int = 0,
     val totalMinutesSpent: Int = 0,
     val moodAverage: Float = 0f,
     val difficultyAverage: Float = 0f,
+    val averageSessionMinutes: Double = 0.0,
 )

@@ -69,8 +69,8 @@ class QuestionnaireActivity : ComponentActivity() {
                             age = demographicData?.age?.toIntOrNull() ?: 0,
                             gender = demographicData?.gender.orEmpty(),
                             country = demographicData?.country.orEmpty(),
-                            primaryType = playerTypeData?.primaryType.orEmpty(),
-                            secondaryType = playerTypeData?.secondaryType.orEmpty(),
+                            primaryType = playerTypeData?.primaryType?.name.orEmpty(),
+                            secondaryType = playerTypeData?.secondaryType?.name.orEmpty()
                         )
 
                         val userRepository = UserRepository(Firebase.firestore)

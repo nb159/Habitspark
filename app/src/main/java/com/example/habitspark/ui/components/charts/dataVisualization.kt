@@ -1,27 +1,39 @@
 package com.example.habitspark.ui.components.charts
 
+import android.util.Log
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.habitspark.data.dataTypes.LegendItem
+import com.example.habitspark.data.dataTypes.PieSlice
+import com.example.habitspark.ui.theme.PrimaryText
 import ir.ehsannarmani.compose_charts.ColumnChart
-import ir.ehsannarmani.compose_charts.PieChart
 import ir.ehsannarmani.compose_charts.models.BarProperties
 import ir.ehsannarmani.compose_charts.models.Bars
 import ir.ehsannarmani.compose_charts.models.DrawStyle
@@ -36,7 +48,7 @@ import ir.ehsannarmani.compose_charts.models.Pie
 @Composable
 fun barChart(
     chartLabel: String,
-    chartSourceData: List<Pair<String,List<Int>>>,
+    chartSourceData: List<Pair<String,List<Double>>>,
     yAxisStepCount: Int = 4,
     yAxisMaxMinValues: Pair<Double, Double> = Pair(90.0, 0.0)
 ) {
@@ -55,7 +67,7 @@ fun barChart(
                 Bars(
                     label = label,
                     values = values.map { value ->
-                        Bars.Data(value = value.toDouble(), color = SolidColor(Color.Blue),
+                        Bars.Data(value = value, color = SolidColor(Color.Blue),
                             properties = BarProperties(
                                 spacing = 10.dp,
                                 thickness = 25.dp,
@@ -69,7 +81,10 @@ fun barChart(
                     }
                 )
             }
-
+        },
+        onBarClick = { BarPopupData ->
+            // Handle bar click if needed
+                     Log.d("BarChart","$BarPopupData")
         },
         //X and Y axis labels
         labelProperties = LabelProperties(
@@ -123,24 +138,29 @@ fun barChart(
 
 @Composable
 fun pieChart(
-
+    data: List<PieSlice>,
+    labelSize: Float = 35f
 ){
-    var data by remember {
+    var chartData by remember {
         mutableStateOf(
-            listOf(
-                Pie(label = "Android", data = 20.0, color = Color.Red, selectedColor = Color.Green),
-                Pie(label = "Windows", data = 45.0, color = Color.Cyan, selectedColor = Color.Blue),
-                Pie(label = "Linux", data = 35.0, color = Color.Gray, selectedColor = Color.Yellow),
-            )
+            data.map { pieSlice ->
+                Pie(
+                    label = "${pieSlice.label}\n${pieSlice.percentage.toInt()}%",
+                    data = pieSlice.percentage.toDouble(),
+                    color = pieSlice.color,
+                    selectedColor = pieSlice.color.copy(alpha = 0.8f),
+                    selected = false
+                )
+            }
         )
     }
-    PieChart(
+    modPieChart(
         modifier = Modifier.size(200.dp),
-        data = data,
-        onPieClick = {
-            println("${it.label} Clicked")
-            val pieIndex = data.indexOf(it)
-            data = data.mapIndexed { mapIndex, pie -> pie.copy(selected = pieIndex == mapIndex) }
+        data = chartData,
+        onPieClick = { clickedPie ->
+            chartData = chartData.map { pie ->
+                pie.copy(selected = clickedPie != null && pie == clickedPie)
+            }
         },
         selectedScale = 1.2f,
         scaleAnimEnterSpec = spring<Float>(
@@ -151,7 +171,66 @@ fun pieChart(
         colorAnimExitSpec = tween(300),
         scaleAnimExitSpec = tween(300),
         spaceDegreeAnimExitSpec = tween(300),
-        style = Pie.Style.Fill
+        spaceDegree = 1f,
+        selectedPaddingDegree = 2f,
+        style = Pie.Style.Stroke(width = 30.dp),
+        labelSize = labelSize
     )
+
+}
+
+@Composable
+fun dataLegend(
+    items: List<LegendItem>,
+    modifier: Modifier = Modifier,
+    boxSize: Dp = 16.dp,
+    spacing: Dp = 8.dp,
+    fontSize: Float = 14f
+) {
+    Column(modifier = modifier) {
+        items.forEach { item ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(vertical = 4.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(boxSize)
+                        .background(item.color, shape = RoundedCornerShape(4.dp))
+                )
+                Spacer(modifier = Modifier.width(spacing))
+                Text(
+                    text = item.label,
+                    style = TextStyle(
+                        fontSize = fontSize.sp,
+                        color = PrimaryText
+                    )
+                )
+            }
+        }
+    }
+}
+@Composable
+fun spaceDivider(
+    height: Int = 16,
+    divide: Boolean = false,
+    dividerFraction: Float = 0.5f
+){
+    val spaceHeight = (height/2).dp
+    Column(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Spacer(modifier = Modifier.height(spaceHeight))
+        if (divide) {
+            Divider(
+                color = Color.LightGray.copy(alpha = 0.5f),
+                thickness = 1.dp,
+                modifier = Modifier.fillMaxWidth(dividerFraction)
+            )
+        }
+        Spacer(modifier = Modifier.height(spaceHeight))
+    }
 
 }

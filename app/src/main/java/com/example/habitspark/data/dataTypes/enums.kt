@@ -10,7 +10,7 @@ enum class GoalType(val label: String) {
 
     companion object {
         fun fromLabel(label: String): GoalType? =
-            values().firstOrNull { it.label.equals(label, ignoreCase = true) }
+            entries.firstOrNull { it.label.equals(label, ignoreCase = true) }
     }
 }
 
@@ -24,7 +24,7 @@ enum class AchievementType(val label: String) {
 
     companion object {
         fun fromLabel(label: String): AchievementType? =
-            values().firstOrNull { it.label.equals(label, ignoreCase = true) }
+            entries.firstOrNull { it.label.equals(label, ignoreCase = true) }
     }
 }
 
@@ -34,6 +34,26 @@ enum class RewardType(val label: String) {
 
     companion object {
         fun fromLabel(label: String): RewardType? =
-            values().firstOrNull { it.label.equals(label, ignoreCase = true) }
+            entries.firstOrNull { it.label.equals(label, ignoreCase = true) }
+    }
+}
+
+enum class PlayerType(val label: String, val description: String) {
+    ACHIEVER("Achiever", "Love challenges and mastery"),
+    PLAYER("Player", "Motivated by rewards"),
+    SOCIALIZER("Socializer", "Enjoy social interaction"),
+    PHILANTHROPIST("Philanthropist", "Value helping others"),
+    FREE_SPIRIT("Free Spirit", "Crave creativity and autonomy"),
+    DISRUPTOR("Disruptor", "Like changing or challenging the system"),
+    UNKNOWN("Unknown", "No specific type");
+
+    companion object {
+        fun fromLabel(label: String): PlayerType? {
+            return entries.firstOrNull { it.label.equals(label, ignoreCase = true) }
+        }
+
+        fun fromNameOrNull(name: String): PlayerType? {
+            return entries.firstOrNull { it.name.equals(name, ignoreCase = true) }
+        }
     }
 }

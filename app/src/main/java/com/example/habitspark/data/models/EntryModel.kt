@@ -15,12 +15,12 @@ data class EntryModel(
     val createdDate: Timestamp = Timestamp.now()
 )
 
-enum class Mood(val emoji: String, val value: Int) {
-    TERRIBLE("😣", 1),
-    BAD("😞", 2),
-    OKAY("😐", 3),
-    GOOD("😊", 4),
-    GREAT("🤩", 5);
+enum class Mood(val emoji: String, val value: Int, val color: Color) {
+    TERRIBLE("😣", 1, Color(0xFFD32F2F)),   // Dark Red
+    BAD("😞", 2, Color(0xFFF57C00)),        // Orange
+    OKAY("😐", 3, Color(0xFFFFC107)),       // Yellow
+    GOOD("😊", 4, Color(0xFF81C784)),       // Light Green
+    GREAT("🤩", 5, Color(0xFF4DD0E1));      // Cyan
 
     companion object {
         fun fromValue(value: Int): Mood? = entries.firstOrNull { it.value == value }
