@@ -56,9 +56,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.habitspark.R
+import com.example.habitspark.data.models.EntryModel
 import com.example.habitspark.data.models.HabitModel
 import com.example.habitspark.data.models.Mood
 import com.example.habitspark.data.models.UserModel
+import com.example.habitspark.ui.components.confirmationDialog.confirmationDialog
 import com.example.habitspark.ui.events.StatsEvent
 import com.example.habitspark.ui.events.StatsEventBus
 import com.example.habitspark.ui.theme.BackgroundColor
@@ -107,6 +109,7 @@ fun habitsScreen(
 
     var showHabitDialog by remember { mutableStateOf(false) }
     var showEntryDialog by remember { mutableStateOf(EntryDialogState()) }
+    var habitToDelete by remember { mutableStateOf<HabitModel?>(null) }
 
     Scaffold(
         floatingActionButton = {
@@ -134,8 +137,7 @@ fun habitsScreen(
                 habits = habits,
                 onHabitClick,
                 onHabitDelete = { habit ->
-                    habitViewModel.deleteHabit(habit)
-                    habitViewModel.fetchHabits(user!!.id)
+                    habitToDelete = habit
                 },
                 onAddEntryClicked = { habitId ->
                     showEntryDialog = EntryDialogState(visible = true, habitId = habitId)
@@ -162,6 +164,20 @@ fun habitsScreen(
                             habitViewModel.fetchHabits(userId)
                             userViewModel.getUserById(userId)
                         }
+                    }
+                )
+            }
+
+            if (habitToDelete != null) {
+                confirmationDialog(
+                    onDismiss = { habitToDelete = null },
+                    onProceed = {
+                        coroutineScope.launch {
+                            habitViewModel.deleteHabit(habitToDelete!!)
+                            userViewModel.getUserById(userId)
+                            habitToDelete = null
+                        }
+
                     }
                 )
             }

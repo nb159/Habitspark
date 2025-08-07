@@ -1,6 +1,7 @@
 package com.example.habitspark.ui.views.habits
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -53,6 +54,7 @@ import com.example.habitspark.data.models.EntryModel
 import com.example.habitspark.data.models.HabitModel
 import com.example.habitspark.data.models.Mood
 import com.example.habitspark.ui.components.charts.barChart
+import com.example.habitspark.ui.components.confirmationDialog.confirmationDialog
 import com.example.habitspark.ui.theme.PrimaryText
 import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.theme.SurfaceColor
@@ -80,6 +82,7 @@ fun habitDetailsScreen(
     val coroutineScope = rememberCoroutineScope()
 
     var selectedView by remember { mutableStateOf("Entries") }
+    var entryToDelete by remember { mutableStateOf<EntryModel?>(null) }
 
     LaunchedEffect(habitId) {
         entryViewModel.fetchEntriesForHabit(habitId)
@@ -112,7 +115,7 @@ fun habitDetailsScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             if (selectedView == "Entries") {
-                entryList(entries, onEntryDelete = { entry -> entryViewModel.deleteEntry(entry) })
+                entryList(entries) { entry -> entryToDelete = entry }
             } else {
                 habitStatistics(habit, entries)
             }
@@ -128,6 +131,17 @@ fun habitDetailsScreen(
                             entryViewModel.fetchEntriesForHabit(habitId)
                         }
                     },
+                )
+            }
+
+            if (entryToDelete != null) {
+                confirmationDialog(
+                    onDismiss = { entryToDelete = null },
+                    onProceed = {
+                        entryViewModel.deleteEntry(entryToDelete!!)
+                        entryToDelete = null
+
+                    }
                 )
             }
 

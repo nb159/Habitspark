@@ -59,8 +59,7 @@ class HabitViewModel(
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun deleteHabit(habit: HabitModel) {
-        viewModelScope.launch {
+    suspend fun deleteHabit(habit: HabitModel) {
             try {
                 habitRepository.deleteHabit(habit.id).await()
                 entryRepository.deleteEntriesByHabitId(habit.id).await()
@@ -69,7 +68,6 @@ class HabitViewModel(
             } catch (e: Exception) {
                 _error.value = e.message
             }
-        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
