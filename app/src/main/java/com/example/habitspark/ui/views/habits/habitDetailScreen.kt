@@ -1,7 +1,6 @@
 package com.example.habitspark.ui.views.habits
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -44,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -479,8 +479,12 @@ fun habitStatistics(habit: HabitModel?, entries: List<EntryModel>) {
                     .fillMaxWidth()
                     .padding(10.dp),
             ) {
+                Text(
+                    text = "Weekly Habit Activity in Minutes",
+                    textAlign = TextAlign.Start
+                )
+                Spacer(modifier = Modifier.height(15.dp))
                 barChart(
-                    "Weekly Habit Activity in Minutes",
                     dailyMinutes,
                     4,
                     yAxisMaxMinValues = Pair((maxMinutes+20), 0.0)

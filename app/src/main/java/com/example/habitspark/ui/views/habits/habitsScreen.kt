@@ -5,6 +5,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -56,7 +57,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.habitspark.R
-import com.example.habitspark.data.models.EntryModel
 import com.example.habitspark.data.models.HabitModel
 import com.example.habitspark.data.models.Mood
 import com.example.habitspark.data.models.UserModel
@@ -314,6 +314,7 @@ fun userLevelAndProgressBar(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun habitList(
     habits: SnapshotStateList<HabitModel>,
@@ -322,20 +323,45 @@ fun habitList(
     onAddEntryClicked: (habitId: String) -> Unit = {}
 ) {
     if (habits.isEmpty()) {
-        Text(
-            text = "No habits found. Start tracking your progress!",
-            color = SecondaryText,
-            style = MaterialTheme.typography.bodyMedium
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Spacer(modifier = Modifier.weight(0.3f)) // Pushes content slightly down
+            Text(
+                text = "One Day... or Day One",
+                color = SecondaryText,
+                style = MaterialTheme.typography.headlineSmall
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = "Start your Habit",
+                color = SecondaryText,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(modifier = Modifier.weight(0.7f)) // Fills remaining space below
+
+        }
         return
     }
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(habits, key = { it.id }) { habit ->
-            habitItem(habit = habit, onHabitClick, onHabitDelete, onAddEntryClicked)
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(
+                habits.sortedByDescending { it.updatedAt },
+                key = { it.id }
+            ) { habit ->
+                habitItem(
+                    habit = habit,
+                    onHabitClick = onHabitClick,
+                    onHabitDelete = onHabitDelete,
+                    onAddEntryClicked = onAddEntryClicked,
+                    modifier = Modifier.animateItemPlacement()
+             )
+            }
         }
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -345,6 +371,7 @@ fun habitItem(
     onHabitClick: (habitId: String) -> Unit = {},
     onHabitDelete: (habit: HabitModel) -> Unit = {},
     onAddEntryClicked: (habitId: String) -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
     val totalHabitHours =  minutesToHoursMinutes(habit.totalMinutes)
     val dismissState = rememberDismissState(
@@ -369,6 +396,7 @@ fun habitItem(
 
     SwipeToDismiss(
         state = dismissState,
+        modifier = modifier,
         directions = setOf(DismissDirection.EndToStart, DismissDirection.StartToEnd),
         background = {
             val direction = dismissState.dismissDirection
@@ -443,7 +471,7 @@ fun habitItem(
                         Text(
                             text = buildAnnotatedString {
                                 append("$totalHabitHours hrs • ")
-                                append("Avg. Mood: ${Mood.fromValue(habit.entryMoodAverage)?.emoji ?: "N/A"}")
+                                append("Mood Avg.: ${Mood.fromValue(habit.entryMoodAverage)?.emoji ?: "N/A"}")
                             },
                             color = SecondaryText,
                             style = MaterialTheme.typography.bodySmall

@@ -47,16 +47,10 @@ import ir.ehsannarmani.compose_charts.models.Pie
 
 @Composable
 fun barChart(
-    chartLabel: String,
     chartSourceData: List<Pair<String,List<Double>>>,
     yAxisStepCount: Int = 4,
     yAxisMaxMinValues: Pair<Double, Double> = Pair(90.0, 0.0)
 ) {
-    Text(
-        text = chartLabel
-    )
-    Spacer(modifier = Modifier.height(15.dp))
-
     ColumnChart(
         modifier = Modifier
             .fillMaxWidth()

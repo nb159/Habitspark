@@ -20,6 +20,7 @@ import com.example.habitspark.ui.views.onboarding.PlayerTypeResult
 
 import com.example.habitspark.ui.views.onboarding.demographicQuestionnaireScreen
 import com.example.habitspark.ui.views.onboarding.introScreen
+import com.example.habitspark.ui.views.onboarding.offBoardingInformationScreen
 import com.example.habitspark.ui.views.onboarding.playerTypeQuestionnaireScreen
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
@@ -38,6 +39,7 @@ class QuestionnaireActivity : ComponentActivity() {
                 // You can store these however you like, mutableState or regular vars
                 var demographicData by remember { mutableStateOf<DemographicData?>(null) }
                 var playerTypeData by remember { mutableStateOf<PlayerTypeResult?>(null) }
+                var user by remember { mutableStateOf<UserModel?>(null) }
 
                 when (onboardingStep) {
                     1 -> introScreen(
@@ -64,7 +66,7 @@ class QuestionnaireActivity : ComponentActivity() {
                     )
 
                     4 -> {
-                        val user = UserModel(
+                        val userInformation = UserModel(
                             name = demographicData?.userName.orEmpty(),
                             age = demographicData?.age?.toIntOrNull() ?: 0,
                             gender = demographicData?.gender.orEmpty(),
@@ -72,25 +74,30 @@ class QuestionnaireActivity : ComponentActivity() {
                             primaryType = playerTypeData?.primaryType?.name.orEmpty(),
                             secondaryType = playerTypeData?.secondaryType?.name.orEmpty()
                         )
-
+                        user = userInformation
                         val userRepository = UserRepository(Firebase.firestore)
-                        userRepository.addUser(user)
+                        userRepository.addUser(userInformation)
                             .addOnSuccessListener { documentReference ->
                                 lifecycleScope.launch {
                                     UserPreferencesManager.saveUserId(
                                         context = this@QuestionnaireActivity,
                                         userId = documentReference.id
                                     )
-                                    val intent = Intent(this@QuestionnaireActivity, MainActivity::class.java)
-                                    startActivity(intent)
-
                                 }
                             }
                             .addOnFailureListener { e ->
                                 Log.w("Firestore", "Error adding document", e)
                             }
-
+                        onboardingStep++
                     }
+
+                    5 -> offBoardingInformationScreen (
+                        user = user!!,
+                        onNext = {
+                            val intent = Intent(this@QuestionnaireActivity, MainActivity::class.java)
+                            startActivity(intent)
+                        }
+                    )
                 }
             }
         }

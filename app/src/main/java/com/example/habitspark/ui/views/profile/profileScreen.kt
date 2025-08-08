@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -370,7 +369,11 @@ fun ASMoodSummary(
                 )
             } else {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                    Text(
+                        text = "No mood data available",
+                        color = SecondaryText,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             }
         }
@@ -409,7 +412,6 @@ fun ASDifficultySummary(
         )
         Row(
             modifier = Modifier
-
                 .padding(16.dp),
         ) {
             if (entriesDifficultyPercentages.isNotEmpty()) {
@@ -433,7 +435,11 @@ fun ASDifficultySummary(
                 )
             } else {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                    Text(
+                        text = "No difficulty data available",
+                        color = SecondaryText,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             }
         }
@@ -450,11 +456,17 @@ fun ASWeeklyTimeSummary(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 80.dp),
+            .heightIn(min = 120.dp),
         colors = CardDefaults.cardColors(containerColor = SurfaceColor),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(6.dp)
+        elevation = CardDefaults.cardElevation(8.dp)
     ) {
+        Text(
+            text = "Weekly Activity in Hours",
+            color = PrimaryText,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(16.dp)
+        )
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -478,14 +490,18 @@ fun ASWeeklyTimeSummary(
                 }
                 val maxHours = dailyMinutes.maxOfOrNull { it.second.firstOrNull() ?: 0.0 } ?: 0.0
                 barChart(
-                    "Weekly Activity in Hours",
                     dailyMinutes,
                     4,
                     yAxisMaxMinValues = Pair((maxHours + 3), 0.0)
                 )
             } else {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                    Text(
+                        text = "No Weekly Activity data available",
+                        color = SecondaryText,
+                        style = MaterialTheme.typography.bodyMedium,
+
+                    )
                 }
             }
         }
