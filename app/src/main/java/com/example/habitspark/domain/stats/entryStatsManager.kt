@@ -1,13 +1,12 @@
 package com.example.habitspark.domain.stats
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.habitspark.data.dataTypes.AchievementScope
 import com.example.habitspark.data.dataTypes.ActionOperation
 import com.example.habitspark.data.models.EntryModel
 import com.example.habitspark.data.models.HabitModel
-import com.example.habitspark.data.models.Metrics
+import com.example.habitspark.data.models.UserMetrics
 import com.example.habitspark.data.models.UserModel
 import com.example.habitspark.data.repository.EntryRepository
 import com.example.habitspark.data.repository.HabitRepository
@@ -63,7 +62,6 @@ suspend fun onEntryAction(
         val habitNewAvgMood = updateAverageFloat (habit.entryMoodAverage, moodSample, habitOldCount, op)
         val habitNewAvgDifficulty = updateAverageFloat (habit.difficultyRatingAverage, difficultySample, habitOldCount, op)
 
-        Log.d("StatsManager", "on action")
         val habitPatch  = mutableMapOf<String, Any>(
             HabitModel::totalEntries.name to habitNewCount,
             HabitModel::totalMinutes.name to habitNewTotalMinutes,
@@ -116,11 +114,11 @@ suspend fun onEntryAction(
 
 
         val userPatch = mutableMapOf<String, Any>(
-            UserModel::metrics.name + "." + Metrics::totalEntriesLogged.name to userNewEntryCount,
-            UserModel::metrics.name + "." + Metrics::totalMinutesSpent.name to userNewTotalMinutes,
-            UserModel::metrics.name + "." + Metrics::averageSessionMinutes.name to userNewAvgSession,
-            UserModel::metrics.name + "." + Metrics::moodAverage.name to userNewAvgMood,
-            UserModel::metrics.name + "." + Metrics::difficultyAverage.name to userNewAvgDifficulty,
+            UserModel::metrics.name + "." + UserMetrics::totalEntriesLogged.name to userNewEntryCount,
+            UserModel::metrics.name + "." + UserMetrics::totalMinutesSpent.name to userNewTotalMinutes,
+            UserModel::metrics.name + "." + UserMetrics::averageSessionMinutes.name to userNewAvgSession,
+            UserModel::metrics.name + "." + UserMetrics::moodAverage.name to userNewAvgMood,
+            UserModel::metrics.name + "." + UserMetrics::difficultyAverage.name to userNewAvgDifficulty,
         )
         if (op == ActionOperation.ADD) {
             // Streak/lastEntryAt only on ADD (cheap). On DELETE: skip; recompute after.
@@ -132,12 +130,10 @@ suspend fun onEntryAction(
                 userLastEntryAt == entryLocalDate.minusDays(1) -> metrics.streak + 1
                 else -> 1
             }
-            Log.d("StatsManager", "new streak: ${entry.createdDate.toDate()} ")
-            userPatch[UserModel::metrics.name + "." + Metrics::streak.name] = newStreak
-            userPatch[UserModel::metrics.name + "." + Metrics::highestStreak.name] = maxOf(habit.highestStreak, newStreak)
-            userPatch[UserModel::metrics.name + "." + Metrics::lastEntryAt.name]   = entry.createdDate
+            userPatch[UserModel::metrics.name + "." + UserMetrics::streak.name] = newStreak
+            userPatch[UserModel::metrics.name + "." + UserMetrics::highestStreak.name] = maxOf(habit.highestStreak, newStreak)
+            userPatch[UserModel::metrics.name + "." + UserMetrics::lastEntryAt.name]   = entry.createdDate
         }
-        Log.d("StatsManager", "userPatch: $userPatch")
 
         tx.update(userRef, userPatch)
         null
@@ -199,8 +195,8 @@ suspend fun recomputeUserStreak(
     userRepository.updateUserMetrics(
         userId = userId,
         metrics = mapOf(
-            UserModel::metrics.name + "." + Metrics::streak.name to streak,
-            UserModel::metrics.name + "." + Metrics::lastEntryAt.name to (lastEntryAt ?: FieldValue.delete())
+            UserModel::metrics.name + "." + UserMetrics::streak.name to streak,
+            UserModel::metrics.name + "." + UserMetrics::lastEntryAt.name to (lastEntryAt ?: FieldValue.delete())
         )
     )
 }

@@ -1,6 +1,5 @@
 package com.example.habitspark.ui.components.charts
 
-import android.util.Log
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -75,10 +74,6 @@ fun barChart(
                     }
                 )
             }
-        },
-        onBarClick = { BarPopupData ->
-            // Handle bar click if needed
-                     Log.d("BarChart","$BarPopupData")
         },
         //X and Y axis labels
         labelProperties = LabelProperties(

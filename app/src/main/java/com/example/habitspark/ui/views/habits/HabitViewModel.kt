@@ -9,10 +9,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.habitspark.data.dataTypes.ActionOperation
 import com.example.habitspark.data.models.HabitModel
 import com.example.habitspark.data.repository.EntryRepository
 import com.example.habitspark.data.repository.HabitRepository
-import com.example.habitspark.domain.stats.StatsManager
+import com.example.habitspark.domain.stats.onHabitAction
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,8 +31,6 @@ class HabitViewModel(
 
     private val _habitListener = MutableStateFlow<List<HabitModel>>(emptyList())
     val habitListener: StateFlow<List<HabitModel>> = _habitListener
-
-    private val statsManager = StatsManager()
 
     private val _error = mutableStateOf<String?>(null)
     val error: State<String?> = _error
@@ -62,9 +61,11 @@ class HabitViewModel(
     fun addHabit(habit: HabitModel) {
         viewModelScope.launch {
             try {
-                val docRef = habitRepository.addHabit(habit).await()
-//                statsManager.updateStatsFromEntry(habitId = docRef.id, userIdOverride = habit.userId)
-//                updateStates()
+                habitRepository.addHabit(habit).await()
+                onHabitAction(
+                    habit,
+                    ActionOperation.ADD
+                )
             } catch (e: Exception) {
                 _error.value = e.message
             }
@@ -74,9 +75,12 @@ class HabitViewModel(
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun deleteHabit(habit: HabitModel) {
             try {
-                habitRepository.deleteHabit(habit.id).await()
                 entryRepository.deleteEntriesByHabitId(habit.id).await()
-//                statsManager.updateStatsFromEntry(habitId = habit.id, userIdOverride = habit.userId)
+                habitRepository.deleteHabit(habit.id).await()
+                onHabitAction(
+                    habit,
+                    ActionOperation.DELETE
+                )
             } catch (e: Exception) {
                 _error.value = e.message
             }
@@ -87,7 +91,6 @@ class HabitViewModel(
         viewModelScope.launch {
             try {
                 habitRepository.updateHabit(habit)
-                statsManager.updateStatsFromEntry(habitId = habit.id, userIdOverride = habit.userId)
             } catch (e: Exception) {
                 _error.value = e.message
             }

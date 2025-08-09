@@ -1,7 +1,6 @@
 package com.example.habitspark.domain.stats
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.habitspark.data.dataTypes.AchievementType
 import com.example.habitspark.data.dataTypes.RewardType
@@ -33,13 +32,11 @@ class StatsManager(
         val userId = userIdOverride ?: habit?.userId ?: return@withContext
         val user = userRepository.getUserById(userId).await() ?: return@withContext
 
-        Log.d("StatsManager", "old: $habit")
         val allUserEntries = entryRepository.getEntriesByUserId(userId).await()
         val allUserHabits = habitRepository.getUserHabits(userId).await()
 
         if (habit != null) {
             val entries = allUserEntries?.filter { it.habitId == habitId } ?: emptyList()
-            Log.d("StatsManager", "old: $entries")
             val streak = StatsCalculator.calculateStreak(entries)
 
             val updatedHabit = habit.copy(
@@ -103,7 +100,6 @@ class StatsManager(
                 xp = newXp,
                 coin = newCoin
             ).also { updatedUser ->
-                Log.d("StatsManager", "new user: $updatedUser")
                 userRepository.updateUser(updatedUser)
             }
 

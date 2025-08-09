@@ -4,7 +4,7 @@ import com.example.habitspark.data.dataTypes.AchievementScope
 import com.example.habitspark.data.dataTypes.AchievementType
 import com.example.habitspark.data.dataTypes.RewardType
 import com.example.habitspark.data.models.AchievementModel
-import com.example.habitspark.data.models.Metrics
+import com.example.habitspark.data.models.UserMetrics
 import com.example.habitspark.data.models.UserModel
 import com.example.habitspark.data.repository.AchievementRepository
 import com.example.habitspark.ui.events.StatsEvent
@@ -81,7 +81,7 @@ suspend fun achievementStatsManager(
 
 fun isAchievementCompleted(
     achievement: AchievementModel,
-    metrics: Metrics,
+    metrics: UserMetrics,
 ): Boolean {
     return when (achievement.type) {
         AchievementType.HABIT_COUNT -> metrics.totalHabitsTracked >= achievement.goal

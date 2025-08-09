@@ -1,9 +1,7 @@
 package com.example.habitspark.data.repository
 
 import android.annotation.SuppressLint
-import android.util.Log
 import com.example.habitspark.data.models.AchievementModel
-import com.google.android.gms.tasks.Tasks.await
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -17,7 +15,6 @@ object AchievementRepository {
 
     suspend fun fetchAchievements(forceRefresh: Boolean = false): List<AchievementModel> {
         if (cachedAchievements != null && !forceRefresh) {
-            Log.d("AchievementRepository", "Returning cached achievements")
             return cachedAchievements!!
         }
 

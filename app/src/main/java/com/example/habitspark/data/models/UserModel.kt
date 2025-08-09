@@ -9,17 +9,16 @@ data class UserModel(
     val email: String = "",
     val gender: String = "",
     val country: String = "",
-    val level: Int = 1,
     val xp: Int = 0,
     val primaryType: String = "",
     val secondaryType: String = "",
     val achievements: Map<String, Timestamp> = emptyMap(),
     val coin: Int = 0,
-    val metrics: Metrics = Metrics(),
+    val metrics: UserMetrics = UserMetrics(),
     val createdDate: Timestamp = Timestamp.now(),
 )
 
-data class Metrics(
+data class UserMetrics(
     val streak: Int = 0,
     val highestStreak: Int = 0,
     val totalEntriesLogged: Int = 0,

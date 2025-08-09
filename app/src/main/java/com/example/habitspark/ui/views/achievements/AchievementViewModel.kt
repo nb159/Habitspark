@@ -5,9 +5,6 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import com.example.habitspark.data.models.AchievementModel
 import com.example.habitspark.data.repository.AchievementRepository
-import com.example.habitspark.domain.stats.StatsManager
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -16,8 +13,6 @@ class AchievementViewModel(
 
     private val _achievements = mutableStateListOf<AchievementModel>()
     val achievements: SnapshotStateList<AchievementModel> = _achievements
-
-    private val statsManager = StatsManager()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading

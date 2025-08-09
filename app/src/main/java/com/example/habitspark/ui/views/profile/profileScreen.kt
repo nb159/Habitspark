@@ -1,7 +1,6 @@
 package com.example.habitspark.ui.views.profile
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -76,7 +75,6 @@ fun profileScreen(
         habitViewModel.fetchHabits(userId)
         entryViewModel.fetchEntriesByUserId(userId)
     }
-    Log.d("ProfileScreen", "User: $user ")
 
     Column(
         modifier = Modifier

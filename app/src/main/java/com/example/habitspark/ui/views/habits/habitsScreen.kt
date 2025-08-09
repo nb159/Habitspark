@@ -100,7 +100,6 @@ fun habitsScreen(
     LaunchedEffect(Unit) {
         habitViewModel.startHabits(userId)
         userViewModel.startUser(userId)
-        Log.d("HabitsScreen", "$user")
 
         StatsEventBus.events.collect { event ->
             if (event is StatsEvent.UserDataChanged) {
@@ -172,6 +171,7 @@ fun habitsScreen(
                     onDismiss = { habitToDelete = null },
                     onProceed = {
                         coroutineScope.launch {
+                            Log.d("HabitsScreen", "Deleting habit: ${habitToDelete}")
                             habitViewModel.deleteHabit(habitToDelete!!)
                             habitToDelete = null
                         }
