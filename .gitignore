@@ -2,6 +2,13 @@
 ./gradle
 build/
 
+# Keystore files
+*.jks
+*.keystore
+
+# Local Gradle properties (contains signing keys)
+gradle.properties
+
 # Local configuration file (sdk path, etc)
 local.properties
 
