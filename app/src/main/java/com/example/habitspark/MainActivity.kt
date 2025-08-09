@@ -285,7 +285,7 @@ fun DrawerContent(
                 modifier = Modifier.padding(bottom = 75.dp)
             )
 
-            DrawerItem("Account", Screen.Profile.route, currentRoute, onDestinationClicked)
+            DrawerItem("Profile", Screen.Profile.route, currentRoute, onDestinationClicked)
             DrawerItem("Habits", Screen.Habits.route, currentRoute, onDestinationClicked)
             DrawerItem("Achievements", Screen.Achievements.route, currentRoute, onDestinationClicked)
 
