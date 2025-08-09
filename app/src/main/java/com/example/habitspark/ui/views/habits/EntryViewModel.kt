@@ -2,17 +2,16 @@ package com.example.habitspark.ui.views.habits
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.habitspark.data.dataTypes.ActionOperation
 import com.example.habitspark.data.models.EntryModel
 import com.example.habitspark.data.models.HabitModel
 import com.example.habitspark.data.repository.EntryRepository
 import com.example.habitspark.data.repository.HabitRepository
-import com.example.habitspark.domain.stats.StatsManager
+import com.example.habitspark.domain.stats.onEntryAction
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,10 +27,12 @@ class EntryViewModel(
     private val _entries = mutableStateListOf<EntryModel>()
     val entries: SnapshotStateList<EntryModel> = _entries
 
-    private val _habit = mutableStateOf<HabitModel?>(null)
-    val habit: State<HabitModel?> = _habit
+    private val _entriesListener = MutableStateFlow<List<EntryModel>>(emptyList())
+    val entriesListener: StateFlow<List<EntryModel>> = _entriesListener
 
-    private val statsManager = StatsManager()
+    private val _habitListener = MutableStateFlow<HabitModel?>(null)
+    val habit: StateFlow<HabitModel?> = _habitListener
+
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
@@ -39,37 +40,30 @@ class EntryViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
-    fun fetchEntriesForHabit(habitId: String) {
-        _isLoading.value = true
+    fun startEntriesForHabitListener(habitId: String) {
         viewModelScope.launch {
-            try {
-                val results = entryRepository.getEntriesForHabit(habitId)
-                _entries.clear()
-                _entries.addAll(results)
-            } catch (e: Exception) {
-                _error.value = e.message
-            } finally {
-                _isLoading.value = false
+            entryRepository.listenEntriesForHabit(habitId).collect { entries ->
+                _entriesListener.value = entries
             }
         }
     }
 
-    fun fetchHabit(habitId: String) {
-        habitRepository.getHabitById(habitId)
-            .addOnSuccessListener { result ->
-                _habit.value = result
+    fun startHabitListener(habitId: String) {
+        viewModelScope.launch {
+            habitRepository.listenHabitById(habitId).collect { habit ->
+                _habitListener.value = habit
             }
-            .addOnFailureListener { exception ->
-                _error.value = exception.localizedMessage
-            }
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun addEntry(entry: EntryModel) {
         try {
             entryRepository.addEntry(entry).await()
-            statsManager.updateStatsFromEntry(entry.habitId)
-            updateStates()
+            onEntryAction(
+                entry,
+                ActionOperation.ADD
+            )
         } catch (e: Exception) {
             _error.value = e.message
         }
@@ -81,8 +75,10 @@ class EntryViewModel(
         viewModelScope.launch {
             try {
                 entryRepository.deleteEntry(entry.id).await()
-                statsManager.updateStatsFromEntry(entry.habitId)
-                updateStates()
+                onEntryAction(
+                    entry,
+                    ActionOperation.DELETE
+                )
             } catch (e: Exception) {
                 _error.value = e.message
             }
@@ -106,10 +102,5 @@ class EntryViewModel(
 
     fun clearError() {
         _error.value = null
-    }
-
-    private fun updateStates(){
-        fetchEntriesForHabit(_habit.value?.id ?: "")
-        fetchHabit(_habit.value?.id ?: "")
     }
 }

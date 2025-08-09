@@ -57,3 +57,12 @@ enum class PlayerType(val label: String, val description: String) {
         }
     }
 }
+
+enum class ActionOperation() {
+    ADD,
+    DELETE,
+}
+enum class AchievementScope {
+    ON_ENTRY,
+    ON_HABIT_CREATED
+}

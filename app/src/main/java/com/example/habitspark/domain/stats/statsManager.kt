@@ -33,10 +33,14 @@ class StatsManager(
         val userId = userIdOverride ?: habit?.userId ?: return@withContext
         val user = userRepository.getUserById(userId).await() ?: return@withContext
 
-        if (habit != null) {
-            val entries = entryRepository.getEntriesForHabit(habitId)
-            val streak = StatsCalculator.calculateStreak(entries)
+        Log.d("StatsManager", "old: $habit")
+        val allUserEntries = entryRepository.getEntriesByUserId(userId).await()
+        val allUserHabits = habitRepository.getUserHabits(userId).await()
 
+        if (habit != null) {
+            val entries = allUserEntries?.filter { it.habitId == habitId } ?: emptyList()
+            Log.d("StatsManager", "old: $entries")
+            val streak = StatsCalculator.calculateStreak(entries)
 
             val updatedHabit = habit.copy(
                 totalEntries = entries.size,
@@ -46,12 +50,13 @@ class StatsManager(
                 difficultyRatingAverage = StatsCalculator.calculateAverageDifficulty(entries),
                 currentStreak = streak,
                 highestStreak = maxOf(habit.highestStreak, streak),
+                updatedAt = Timestamp.now()
             )
             habitRepository.updateHabit(updatedHabit)
         }
 
-        val allUserEntries = entryRepository.getEntriesByUserId(userId).await()
-        val allUserHabits = habitRepository.getUserHabits(userId).await()
+//        val allUserEntries = entryRepository.getEntriesByUserId(userId).await()
+//        val allUserHabits = habitRepository.getUserHabits(userId).await()
 
         val userStreak = StatsCalculator.calculateStreak(allUserEntries)
         val updatedUser = user.copy(
@@ -77,6 +82,7 @@ class StatsManager(
         habits: List<HabitModel>,
         entries: List<EntryModel>
     ) {
+
         val unlockedUserAchievements = user.achievements.keys
         val achievements = AchievementRepository.fetchAchievements()
 

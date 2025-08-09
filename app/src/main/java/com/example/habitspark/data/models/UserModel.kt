@@ -28,4 +28,5 @@ data class Metrics(
     val moodAverage: Float = 0f,
     val difficultyAverage: Float = 0f,
     val averageSessionMinutes: Double = 0.0,
+    val lastEntryAt: Timestamp? = null
 )

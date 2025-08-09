@@ -33,6 +33,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -76,8 +77,8 @@ fun habitDetailsScreen(
     userId: String,
 ) {
     val entryViewModel: EntryViewModel = viewModel()
-    val entries = entryViewModel.entries
-    val habit by entryViewModel.habit
+    val entries by entryViewModel.entriesListener.collectAsState()
+    val habit by entryViewModel.habit.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -85,8 +86,8 @@ fun habitDetailsScreen(
     var entryToDelete by remember { mutableStateOf<EntryModel?>(null) }
 
     LaunchedEffect(habitId) {
-        entryViewModel.fetchEntriesForHabit(habitId)
-        entryViewModel.fetchHabit(habitId)
+        entryViewModel.startEntriesForHabitListener(habitId)
+        entryViewModel.startHabitListener(habitId)
     }
 
     var showDialog by remember { mutableStateOf(false) }
@@ -128,7 +129,6 @@ fun habitDetailsScreen(
                     onSave = { entry ->
                         coroutineScope.launch {
                             entryViewModel.addEntry(entry)
-                            entryViewModel.fetchEntriesForHabit(habitId)
                         }
                     },
                 )
@@ -299,8 +299,8 @@ fun entryList(entries: List<EntryModel>, onEntryDelete: (entry: EntryModel) -> U
 }
 @Composable
 fun entryItem(entry: EntryModel, onEntryDelete: (entry: EntryModel) -> Unit = {}) {
-    val difficulty = entry.difficultyValue?.let { DifficultyLevel.fromValue(it) }
-    val mood = entry.moodValue?.let { Mood.fromValue(it) }
+    val difficulty = entry.difficultyValue.let { DifficultyLevel.fromValue(it) }
+    val mood = entry.moodValue.let { Mood.fromValue(it) }
 
     val formattedTimestamp = remember(entry.createdDate) {
         // Format: Jul 19, 10:45 AM

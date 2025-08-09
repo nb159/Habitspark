@@ -218,7 +218,7 @@ class MainActivity : ComponentActivity() {
                         ) { innerPadding ->
                             NavHost(
                                 navController = navController,
-                                startDestination = Screen.Profile.route,
+                                startDestination = Screen.Habits.route,
                                 modifier = Modifier.padding(innerPadding)
                             ) {
                                 composable(Screen.Habits.route) {

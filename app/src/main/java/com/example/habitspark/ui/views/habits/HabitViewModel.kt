@@ -15,6 +15,8 @@ import com.example.habitspark.data.repository.HabitRepository
 import com.example.habitspark.domain.stats.StatsManager
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -25,6 +27,9 @@ class HabitViewModel(
 
     private val _habits = mutableStateListOf<HabitModel>()
     val habits: SnapshotStateList<HabitModel> = _habits
+
+    private val _habitListener = MutableStateFlow<List<HabitModel>>(emptyList())
+    val habitListener: StateFlow<List<HabitModel>> = _habitListener
 
     private val statsManager = StatsManager()
 
@@ -45,13 +50,21 @@ class HabitViewModel(
         }
     }
 
+    fun startHabits(userId: String) {
+        viewModelScope.launch {
+            habitRepository.listenUserHabitsById(userId).collect { list ->
+                _habitListener.value = list.sortedByDescending { it.updatedAt }
+            }
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     fun addHabit(habit: HabitModel) {
         viewModelScope.launch {
             try {
                 val docRef = habitRepository.addHabit(habit).await()
-                statsManager.updateStatsFromEntry(habitId = docRef.id, userIdOverride = habit.userId)
-                updateStates()
+//                statsManager.updateStatsFromEntry(habitId = docRef.id, userIdOverride = habit.userId)
+//                updateStates()
             } catch (e: Exception) {
                 _error.value = e.message
             }
@@ -63,8 +76,7 @@ class HabitViewModel(
             try {
                 habitRepository.deleteHabit(habit.id).await()
                 entryRepository.deleteEntriesByHabitId(habit.id).await()
-                statsManager.updateStatsFromEntry(habitId = habit.id, userIdOverride = habit.userId)
-                updateStates()
+//                statsManager.updateStatsFromEntry(habitId = habit.id, userIdOverride = habit.userId)
             } catch (e: Exception) {
                 _error.value = e.message
             }
@@ -76,14 +88,10 @@ class HabitViewModel(
             try {
                 habitRepository.updateHabit(habit)
                 statsManager.updateStatsFromEntry(habitId = habit.id, userIdOverride = habit.userId)
-                updateStates()
             } catch (e: Exception) {
                 _error.value = e.message
             }
         }
     }
 
-    private fun updateStates() {
-        fetchHabits(_habits.firstOrNull()?.userId ?: return)
-    }
 }

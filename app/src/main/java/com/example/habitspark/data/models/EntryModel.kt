@@ -10,8 +10,8 @@ data class EntryModel(
     val habitId: String = "",
     val description: String = "",
     val minutesSpent: Int = 0,
-    val moodValue: Int? = null,           // Stored as integer from Mood enum
-    val difficultyValue: Int? = null,     // Stored as integer from DifficultyLevel enum
+    val moodValue: Int = 0,           // Stored as integer from Mood enum
+    val difficultyValue: Int = 0,     // Stored as integer from DifficultyLevel enum
     val createdDate: Timestamp = Timestamp.now()
 )
 

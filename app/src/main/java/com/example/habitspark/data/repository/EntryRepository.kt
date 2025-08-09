@@ -6,6 +6,9 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.toObject
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 class EntryRepository(db: FirebaseFirestore) {
@@ -24,15 +27,6 @@ class EntryRepository(db: FirebaseFirestore) {
         return entriesCollection.document(entryId).delete()
     }
 
-    fun getEntry(entryId: String): Task<EntryModel?> {
-        return entriesCollection.document(entryId)
-            .get()
-            .continueWith { task ->
-                //already returns the entryModel object instead of the calling code having to do it
-                task.result?.toObject<EntryModel>()?.copy(id = task.result.id)
-            }
-    }
-
     suspend fun getEntriesForHabit(habitId: String): List<EntryModel> {
         return entriesCollection
             .whereEqualTo("habitId", habitId)
@@ -43,6 +37,18 @@ class EntryRepository(db: FirebaseFirestore) {
             .mapNotNull { doc ->
                 doc.toObject(EntryModel::class.java)?.copy(id = doc.id)
             }
+    }
+
+    fun listenEntriesForHabit(habitId: String): Flow<List<EntryModel>> = callbackFlow {
+        val reg =entriesCollection
+            .whereEqualTo("habitId", habitId)
+            .orderBy("createdDate", Query.Direction.DESCENDING)
+            .addSnapshotListener { snap, e ->
+                if (e != null) { close(e); return@addSnapshotListener }
+                val list = snap?.documents?.mapNotNull { it.toObject(EntryModel::class.java)?.copy(id = it.id) }.orEmpty()
+                trySend(list)
+            }
+        awaitClose { reg.remove() }
     }
 
 

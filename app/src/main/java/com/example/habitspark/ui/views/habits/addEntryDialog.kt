@@ -2,20 +2,14 @@ package com.example.habitspark.ui.views.habits
 
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -60,8 +54,8 @@ fun addEntryDialog(
 ) {
     val answers = remember { mutableStateMapOf<String, String>() }
 
-    var selectedMood by remember { mutableStateOf<Mood?>(Mood.OKAY) }
-    var selectedDifficulty by remember { mutableStateOf<DifficultyLevel?>(DifficultyLevel.VERY_EASY) }
+    var selectedMood by remember { mutableStateOf<Mood>(Mood.OKAY) }
+    var selectedDifficulty by remember { mutableStateOf<DifficultyLevel>(DifficultyLevel.VERY_EASY) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -72,8 +66,8 @@ fun addEntryDialog(
                     habitId = habitId,
                     description = answers["notes"].orEmpty(),
                     minutesSpent = answers["duration"]?.toInt() ?:0,
-                    moodValue = selectedMood?.value,
-                    difficultyValue = selectedDifficulty?.value,
+                    moodValue = selectedMood.value,
+                    difficultyValue = selectedDifficulty.value,
                     createdDate = Timestamp.now()
                 )
                 onSave(entry)
@@ -124,12 +118,12 @@ fun addEntryDialog(
                 }
 
                 Text("Difficulty", color = SecondaryText)
-                val selectedDifficultyLevel = selectedDifficulty ?: DifficultyLevel.VERY_EASY
+                val selectedDifficultyLevel = selectedDifficulty
 
                 Slider(
                     value = selectedDifficultyLevel.value.toFloat(),
                     onValueChange = { value ->
-                        selectedDifficulty = DifficultyLevel.fromValue(value.toInt())
+                        selectedDifficulty = DifficultyLevel.fromValue(value.toInt())!!
                     },
                     valueRange = 1f..6f,
                     steps = 5,

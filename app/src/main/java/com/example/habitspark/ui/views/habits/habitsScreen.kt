@@ -1,6 +1,7 @@
 package com.example.habitspark.ui.views.habits
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -41,12 +42,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDismissState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -91,14 +92,15 @@ fun habitsScreen(
     val habitViewModel: HabitViewModel = viewModel()
     val entryViewModel: EntryViewModel = viewModel()
 
-    val habits = habitViewModel.habits
-    val user by userViewModel.user
+    val habits by habitViewModel.habitListener.collectAsState()
+    val user by userViewModel.userListener.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-        habitViewModel.fetchHabits(userId)
-        userViewModel.getUserById(userId)
+        habitViewModel.startHabits(userId)
+        userViewModel.startUser(userId)
+        Log.d("HabitsScreen", "$user")
 
         StatsEventBus.events.collect { event ->
             if (event is StatsEvent.UserDataChanged) {
@@ -149,7 +151,6 @@ fun habitsScreen(
                     onDismiss = { showHabitDialog = false },
                     onSave = { habit ->
                         habitViewModel.addHabit(habit)
-                        habitViewModel.fetchHabits(user!!.id)
                     }
                 )
             }
@@ -161,8 +162,6 @@ fun habitsScreen(
                     onSave = { entry ->
                         coroutineScope.launch {
                             entryViewModel.addEntry(entry)
-                            habitViewModel.fetchHabits(userId)
-                            userViewModel.getUserById(userId)
                         }
                     }
                 )
@@ -174,7 +173,6 @@ fun habitsScreen(
                     onProceed = {
                         coroutineScope.launch {
                             habitViewModel.deleteHabit(habitToDelete!!)
-                            userViewModel.getUserById(userId)
                             habitToDelete = null
                         }
 
@@ -317,7 +315,7 @@ fun userLevelAndProgressBar(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun habitList(
-    habits: SnapshotStateList<HabitModel>,
+    habits: List<HabitModel>,
     onHabitClick: (habitId: String) -> Unit = {},
     onHabitDelete: (habit: HabitModel) -> Unit = {},
     onAddEntryClicked: (habitId: String) -> Unit = {}
@@ -354,11 +352,11 @@ fun habitList(
                 key = { it.id }
             ) { habit ->
                 habitItem(
+                    modifier = Modifier.animateItemPlacement(),
                     habit = habit,
                     onHabitClick = onHabitClick,
                     onHabitDelete = onHabitDelete,
                     onAddEntryClicked = onAddEntryClicked,
-                    modifier = Modifier.animateItemPlacement()
              )
             }
         }
@@ -367,11 +365,11 @@ fun habitList(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun habitItem(
+    modifier: Modifier = Modifier,
     habit: HabitModel,
     onHabitClick: (habitId: String) -> Unit = {},
     onHabitDelete: (habit: HabitModel) -> Unit = {},
     onAddEntryClicked: (habitId: String) -> Unit = {},
-    modifier: Modifier = Modifier
 ) {
     val totalHabitHours =  minutesToHoursMinutes(habit.totalMinutes)
     val dismissState = rememberDismissState(
