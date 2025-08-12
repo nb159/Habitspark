@@ -13,6 +13,8 @@ import com.example.habitspark.data.repository.HabitRepository
 import com.example.habitspark.data.repository.UserRepository
 import com.example.habitspark.domain.stats.StatsCalculator.updateAverageDouble
 import com.example.habitspark.domain.stats.StatsCalculator.updateAverageFloat
+import com.example.habitspark.utils.calculateEntryCoins
+import com.example.habitspark.utils.calculateXPFromEntry
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
@@ -37,7 +39,6 @@ suspend fun onEntryAction(
     firestore.runTransaction { tx ->
         val habit = tx.get(habitRef).toObject(HabitModel::class.java) ?: return@runTransaction null
         val user = tx.get(userRef).toObject(UserModel::class.java) ?: return@runTransaction null
-
 
         /**
          * ####################
@@ -68,8 +69,7 @@ suspend fun onEntryAction(
             HabitModel::averageSessionMinutes.name to habitNewAvgSession,
             HabitModel::entryMoodAverage.name to habitNewAvgMood,
             HabitModel::difficultyRatingAverage.name to habitNewAvgDifficulty,
-//            HabitModel::currentStreak.name to habitNewStreak,
-//            HabitModel::highestStreak.name to habitNewHighestStreak,
+
             HabitModel::updatedAt.name to Timestamp.now(),
         )
         if (op == ActionOperation.ADD) {
@@ -130,6 +130,11 @@ suspend fun onEntryAction(
                 userLastEntryAt == entryLocalDate.minusDays(1) -> metrics.streak + 1
                 else -> 1
             }
+            val userNewXp = user.xp + calculateXPFromEntry(entry.minutesSpent)
+            val userNewCoins = user.coin + calculateEntryCoins(entry.minutesSpent)
+
+            userPatch[UserModel::xp.name] = userNewXp
+            userPatch[UserModel::coin.name] = userNewCoins
             userPatch[UserModel::metrics.name + "." + UserMetrics::streak.name] = newStreak
             userPatch[UserModel::metrics.name + "." + UserMetrics::highestStreak.name] = maxOf(habit.highestStreak, newStreak)
             userPatch[UserModel::metrics.name + "." + UserMetrics::lastEntryAt.name]   = entry.createdDate
