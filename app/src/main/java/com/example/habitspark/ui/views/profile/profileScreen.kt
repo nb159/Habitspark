@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,7 +51,6 @@ import com.example.habitspark.ui.theme.PrimaryText
 import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.theme.SurfaceColor
 import com.example.habitspark.ui.views.habits.EntryViewModel
-import com.example.habitspark.ui.views.habits.HabitViewModel
 import com.example.habitspark.ui.views.user.UserViewModel
 import com.example.habitspark.utils.minutesToDecimalHours
 import com.example.habitspark.utils.minutesToHoursMinutes
@@ -68,17 +68,15 @@ fun profileScreen(
     userId: String
 ) {
     val userViewModel: UserViewModel = viewModel()
-    val habitViewModel: HabitViewModel = viewModel()
     val entryViewModel: EntryViewModel = viewModel()
 
-    val user by userViewModel.user
+    val user by userViewModel.userListener.collectAsState()
     val entries = entryViewModel.entries
 
     var selectedView by remember { mutableStateOf("Statistics") }
 
     LaunchedEffect(Unit) {
-        userViewModel.getUserById(userId)
-        habitViewModel.fetchHabits(userId)
+        userViewModel.startUser(userId)
         entryViewModel.fetchEntriesByUserId(userId)
     }
 
@@ -104,7 +102,7 @@ fun profileScreen(
                     entries = entries
                 )
             } else {
-                leaderBoard()
+                leaderBoard(user = it)
             }
 
 

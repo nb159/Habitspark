@@ -59,7 +59,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.habitspark.data.repository.UserPreferencesManager
-import com.example.habitspark.ui.events.StatsEvent
+import com.example.habitspark.ui.events.HasMessage
 import com.example.habitspark.ui.events.StatsEventBus
 import com.example.habitspark.ui.theme.BackgroundColor
 import com.example.habitspark.ui.theme.HabitSparkTheme
@@ -156,7 +156,7 @@ class MainActivity : ComponentActivity() {
                     val snackbarHostState  = remember { SnackbarHostState() }
                     LaunchedEffect(Unit) {
                         StatsEventBus.events.collect { event ->
-                            if (event is StatsEvent.AchievementUnlocked) {
+                            if (event is HasMessage) {
                                 snackbarHostState.showSnackbar(event.message)
                             }
                         }

@@ -25,5 +25,8 @@ data class LeaderboardRow(
     val userId: String,
     val name: String,
     val minutes: Int,
-    val rank: Int
+    val rank: Int,
+    val highlightStyle: String? = null,   // e.g., "GLOW", "CROWN", "FRAME"
+    val highlightExpiresAtMs: Long? = null
+
 )

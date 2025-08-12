@@ -1,5 +1,7 @@
 package com.example.habitspark.data.dataTypes
 
+import com.google.firebase.Timestamp
+
 enum class InputType {
     TEXT, SELECT, BOOLEAN, NUMBER
 }
@@ -57,6 +59,18 @@ enum class PlayerType(val label: String, val description: String) {
         }
     }
 }
+
+enum class HighlightStyle(val label: String, val cost: Int, val expiresInDays: Int) {
+    GLOW("Glow Name", 50,1 ),
+    FRAME("Profile Frame", 75, 1),
+    CROWN("Crown Icon", 100, 1)
+}
+
+data class HighlightPurchaseResult(
+    val newCoins: Int,
+    val styleName: String,
+    val expiresAt: Timestamp
+)
 
 enum class ActionOperation() {
     ADD,

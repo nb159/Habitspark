@@ -15,6 +15,8 @@ data class UserModel(
     val achievements: Map<String, Timestamp> = emptyMap(),
     val coin: Int = 0,
     val metrics: UserMetrics = UserMetrics(),
+    val highlightStyle: String? = null,
+    val highlightExpiresAt: Timestamp? = null,
     val createdDate: Timestamp = Timestamp.now(),
 )
 
