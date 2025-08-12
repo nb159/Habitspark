@@ -23,6 +23,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
@@ -42,6 +45,7 @@ import com.example.habitspark.ui.components.charts.dataLegend
 import com.example.habitspark.ui.components.charts.pieChart
 import com.example.habitspark.ui.components.charts.spaceDivider
 import com.example.habitspark.ui.components.toolTip.infoTooltip
+import com.example.habitspark.ui.components.viewSwitcher.ViewSwitcher
 import com.example.habitspark.ui.theme.PrimaryText
 import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.theme.SurfaceColor
@@ -70,6 +74,8 @@ fun profileScreen(
     val user by userViewModel.user
     val entries = entryViewModel.entries
 
+    var selectedView by remember { mutableStateOf("Statistics") }
+
     LaunchedEffect(Unit) {
         userViewModel.getUserById(userId)
         habitViewModel.fetchHabits(userId)
@@ -80,16 +86,28 @@ fun profileScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         user?.let {
             userHeader(user = it)
-            spaceDivider(40, false)
-            userType(user = it)
-            spaceDivider(40, true)
-            accountInformation(user = it)
-            spaceDivider(40, true)
-            accountStatistics(entries = entries)
+            ViewSwitcher(
+                selectedView = selectedView,
+                options = listOf("Statistics", "Leader board"),
+                onViewChange = { selectedView = it }
+            )
+            spaceDivider(20, false)
+
+            if (selectedView == "Statistics") {
+                userStatistics(
+                    user = it,
+                    entries = entries
+                )
+            } else {
+                leaderBoard()
+            }
+
+
         }
     }
 
@@ -145,6 +163,21 @@ fun userHeader(
         }
     }
 }
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun userStatistics(
+    user: UserModel,
+    entries: List<EntryModel>
+) {
+    userType(user = user)
+    spaceDivider(40, true)
+    accountInformation(user = user)
+    spaceDivider(40, true)
+    accountSummaries(entries = entries)
+}
+
 
 @Composable
 fun userType(
@@ -299,7 +332,7 @@ fun accountInformation(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun accountStatistics(
+fun accountSummaries(
     entries: List<EntryModel>
 ) {
 

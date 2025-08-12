@@ -20,3 +20,10 @@ data class LegendItem(
     val color: Color,
     val label: String
 )
+
+data class LeaderboardRow(
+    val userId: String,
+    val name: String,
+    val minutes: Int,
+    val rank: Int
+)

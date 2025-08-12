@@ -4,6 +4,7 @@ import com.example.habitspark.data.models.UserModel
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.toObject
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -43,4 +44,19 @@ class UserRepository(db: FirebaseFirestore) {
             }
         awaitClose { reg.remove() }
     }
+
+    // used for leader board by total minutes spent
+    fun listenAllTimeLeaderboard(limit: Long = 10): Flow<List<UserModel>> =
+        callbackFlow {
+            val reg = usersCollection
+                .orderBy("metrics.totalMinutesSpent", Query.Direction.DESCENDING)
+                .limit(limit)
+                .addSnapshotListener { snap, e ->
+                    if (e != null) { close(e); return@addSnapshotListener }
+                    val users = snap?.documents.orEmpty()
+                        .mapNotNull { it.toObject(UserModel::class.java)?.copy(id = it.id) }
+                    trySend(users)
+                }
+            awaitClose { reg.remove() }
+        }
 }
