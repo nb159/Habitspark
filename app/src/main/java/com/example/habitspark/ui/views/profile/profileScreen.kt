@@ -1,6 +1,7 @@
 package com.example.habitspark.ui.views.profile
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,6 +42,9 @@ import com.example.habitspark.data.models.DifficultyLevel
 import com.example.habitspark.data.models.EntryModel
 import com.example.habitspark.data.models.Mood
 import com.example.habitspark.data.models.UserModel
+import com.example.habitspark.domain.featureGate.Feature
+import com.example.habitspark.domain.featureGate.FeatureGate
+import com.example.habitspark.domain.featureGate.UserGroup
 import com.example.habitspark.ui.components.charts.barChart
 import com.example.habitspark.ui.components.charts.dataLegend
 import com.example.habitspark.ui.components.charts.pieChart
@@ -89,11 +93,13 @@ fun profileScreen(
     ) {
         user?.let {
             userHeader(user = it)
-            ViewSwitcher(
-                selectedView = selectedView,
-                options = listOf("Statistics", "Leader board"),
-                onViewChange = { selectedView = it }
-            )
+            FeatureGate(it, Feature.LEADERBOARD) {
+                ViewSwitcher(
+                    selectedView = selectedView,
+                    options = listOf("Statistics", "Leader board"),
+                    onViewChange = { selectedView = it }
+                )
+            }
             spaceDivider(20, false)
 
             if (selectedView == "Statistics") {
@@ -183,6 +189,7 @@ fun userType(
 ) {
     val primary = PlayerType.fromNameOrNull(user.primaryType) ?: PlayerType.UNKNOWN
     val secondary = PlayerType.fromNameOrNull(user.secondaryType) ?: PlayerType.UNKNOWN
+    val userGroup = UserGroup.fromLabel(user.userGroup) ?: UserGroup.UNKNOWN
 
     Card(
         modifier = Modifier
@@ -223,7 +230,7 @@ fun userType(
                         infoTooltip(content = primary.description)
                     }
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    spaceDivider(4)
 
                     Row {
                         Text(
@@ -234,6 +241,14 @@ fun userType(
                         Spacer(modifier = Modifier.width(4.dp))
                         infoTooltip(content = secondary.description, iconSize = 14.dp)
                     }
+                    spaceDivider(10)
+                    Log.d("UserGroup", "User Group: ${user.userGroup}")
+
+                    Text(
+                        text = "User Group: ${userGroup.label}",
+                        color = SecondaryText,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             }
         }

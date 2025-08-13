@@ -26,6 +26,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.habitspark.data.dataTypes.AchievementType
 import com.example.habitspark.data.models.AchievementModel
 import com.example.habitspark.data.models.UserModel
+import com.example.habitspark.domain.featureGate.Feature
+import com.example.habitspark.domain.featureGate.canAccess
 import com.example.habitspark.ui.theme.PrimaryAccent
 import com.example.habitspark.ui.theme.PrimaryText
 import com.example.habitspark.ui.theme.SecondaryText
@@ -94,12 +96,14 @@ fun achievementList(
             val unlockedAt = user.achievements[achievement.id]?.let {
                 formatter.format(it.toDate())
             }
+            val showXp = canAccess(user, Feature.XP)
 
             achievementItem(
                 achievement = achievement,
                 currentProgress = currentProgress,
                 isUnlocked = isUnlocked,
-                unlockedAt = unlockedAt
+                unlockedAt = unlockedAt,
+                showXp = showXp
             )
         }
     }
@@ -110,10 +114,10 @@ fun achievementItem(
     achievement: AchievementModel,
     currentProgress: Int,
     isUnlocked: Boolean,
-    unlockedAt: String? = null
+    unlockedAt: String? = null,
+    showXp: Boolean = false,
 ) {
     val progressPercent = (currentProgress.toFloat() / achievement.goal).coerceIn(0f, 1f)
-
 
     Card(
         modifier = Modifier
@@ -152,8 +156,15 @@ fun achievementItem(
 
             Spacer(modifier = Modifier.height(4.dp))
 
+
+            val achievementProgressAndReward = buildList {
+                add("$currentProgress / ${achievement.goal}")
+                if (showXp) add("${achievement.reward} XP")
+                unlockedAt?.takeIf { it.isNotBlank() }?.let { add(it) }
+            }.joinToString(" • ")
+
             Text(
-                text = "$currentProgress / ${achievement.goal} • ${achievement.reward} XP • ${unlockedAt.let {it ?: ""}}",
+                text = achievementProgressAndReward,
                 style = MaterialTheme.typography.labelSmall,
                 color = SecondaryText
             )

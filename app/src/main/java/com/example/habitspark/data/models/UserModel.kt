@@ -1,5 +1,6 @@
 package com.example.habitspark.data.models
 
+import com.example.habitspark.domain.featureGate.UserGroup
 import com.google.firebase.Timestamp
 
 data class UserModel(
@@ -10,6 +11,7 @@ data class UserModel(
     val gender: String = "",
     val country: String = "",
     val xp: Int = 0,
+    val userGroup: String = UserGroup.A_ALL.label,
     val primaryType: String = "",
     val secondaryType: String = "",
     val achievements: Map<String, Timestamp> = emptyMap(),

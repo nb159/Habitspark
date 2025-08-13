@@ -54,6 +54,9 @@ import com.example.habitspark.data.models.DifficultyLevel
 import com.example.habitspark.data.models.EntryModel
 import com.example.habitspark.data.models.HabitModel
 import com.example.habitspark.data.models.Mood
+import com.example.habitspark.data.models.UserModel
+import com.example.habitspark.domain.featureGate.Feature
+import com.example.habitspark.domain.featureGate.FeatureGate
 import com.example.habitspark.ui.components.charts.barChart
 import com.example.habitspark.ui.components.confirmationDialog.confirmationDialog
 import com.example.habitspark.ui.theme.PrimaryText
@@ -74,7 +77,7 @@ import java.util.Locale
 @Composable
 fun habitDetailsScreen(
     habitId: String,
-    userId: String,
+    user: UserModel,
 ) {
     val entryViewModel: EntryViewModel = viewModel()
     val entries by entryViewModel.entriesListener.collectAsState()
@@ -112,7 +115,9 @@ fun habitDetailsScreen(
                 .padding(16.dp),
         ) {
             habit?.let {  habitHeader(it) }
-            ViewSwitcher(selectedView = selectedView, onViewChange = { selectedView = it })
+            FeatureGate(user = user, feature = Feature.ADVANCED_HABIT_STATS) {
+                ViewSwitcher(selectedView = selectedView, onViewChange = { selectedView = it })
+            }
             Spacer(modifier = Modifier.height(8.dp))
 
             if (selectedView == "Entries") {
@@ -123,7 +128,7 @@ fun habitDetailsScreen(
 
             if (showDialog) {
                 addEntryDialog(
-                    userId = userId,
+                    userId = user.id,
                     habitId = habitId,
                     onDismiss = { showDialog = false },
                     onSave = { entry ->

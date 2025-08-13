@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.habitspark.data.dataTypes.PlayerType
 import com.example.habitspark.ui.components.charts.spaceDivider
@@ -52,28 +53,6 @@ fun introScreen(onNext: () -> Unit) {
 
         item {
             Text(
-                text = "Why Track Your Habits",
-                style = MaterialTheme.typography.titleMedium,
-                color = PrimaryText,
-                modifier = Modifier.padding(bottom = 8.dp).fillMaxWidth(),
-                textAlign = TextAlign.Center
-            )
-        }
-
-        item {
-            Text(
-                text = "Tracking helps you gain insights into your behavior, build self-awareness, and make meaningful change. " +
-                        "Seeing progress, even small wins, helps boost motivation and encourages consistency over time.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = PrimaryText,
-                modifier = Modifier,
-                textAlign = TextAlign.Start
-            )
-            spaceDivider(50, true, 0.75f)
-        }
-
-        item {
-            Text(
                 text = "How HabitSpark Personalizes Your Journey",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -84,10 +63,9 @@ fun introScreen(onNext: () -> Unit) {
 
         item {
             Text(
-                text = "During onboarding, you'll answer a few questions to help us determine your player type.",
+                text = "During onboarding, you'll answer a few questions to help us determine your player type.\n",
                 style = MaterialTheme.typography.bodyMedium,
                 color = PrimaryText,
-                modifier = Modifier.padding(top = 32.dp)
             )
         }
 
@@ -182,7 +160,19 @@ fun introScreen(onNext: () -> Unit) {
                 modifier = Modifier.padding(bottom = 32.dp),
                 textAlign = TextAlign.Start
             )
+            spaceDivider(50, true, 0.75f)
         }
+
+        item {
+            Text(
+                text = "By Clicking 'Get Started', you agree to participate in this research study. Your data will remain anonymous and will only be used for academic purposes. " +
+                        "You can withdraw at any time by uninstalling the app.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = PrimaryText,
+                modifier = Modifier.padding(bottom = 32.dp),
+                textAlign = TextAlign.Start
+            )
+0        }
 
         item {
             Spacer(modifier = Modifier.height(32.dp))
@@ -200,4 +190,10 @@ fun introScreen(onNext: () -> Unit) {
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun IntroScreenPreview() {
+    introScreen(onNext = {})
 }

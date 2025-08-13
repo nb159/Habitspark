@@ -61,7 +61,7 @@ enum class PlayerType(val label: String, val description: String) {
 }
 
 enum class HighlightStyle(val label: String, val cost: Int, val expiresInDays: Int) {
-    GLOW("Glow Name", 200,1 ),
+    GLOW("Glow Name", 20,1 ),
     FRAME("Profile Frame", 75, 1),
     CROWN("Crown Icon", 100, 1)
 }

@@ -51,6 +51,8 @@ import com.example.habitspark.R
 import com.example.habitspark.data.dataTypes.HighlightStyle
 import com.example.habitspark.data.dataTypes.LeaderboardRow
 import com.example.habitspark.data.models.UserModel
+import com.example.habitspark.domain.featureGate.Feature
+import com.example.habitspark.domain.featureGate.FeatureGate
 import com.example.habitspark.ui.components.charts.spaceDivider
 import com.example.habitspark.ui.events.StatsEvent
 import com.example.habitspark.ui.events.StatsEventBus
@@ -82,15 +84,17 @@ fun leaderBoard(
 
     Log.d("LeaderBoard", "Time Spent Rows: $timeSpentRows")
 
-    highlightUpsell(
-        currentUser = user,
-        style = HighlightStyle.GLOW,
-        onBuyClick = { style ->
-            leaderboardViewModel.purchaseHighlight(userId = user.id, style = style )
-        },
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-        isPurchasing = isPurchasing,
-    )
+    FeatureGate(user, Feature.HIGHLIGHT_PURCHASE) {
+        highlightUpsell(
+            currentUser = user,
+            style = HighlightStyle.GLOW,
+            onBuyClick = { style ->
+                leaderboardViewModel.purchaseHighlight(userId = user.id, style = style )
+            },
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            isPurchasing = isPurchasing,
+        )
+    }
 
     minutesSpentLeaderboard (
         timeSpentRows = timeSpentRows,

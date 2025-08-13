@@ -26,8 +26,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DismissDirection
@@ -58,20 +56,19 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.habitspark.R
 import com.example.habitspark.data.models.HabitModel
 import com.example.habitspark.data.models.Mood
 import com.example.habitspark.data.models.UserMetrics
 import com.example.habitspark.data.models.UserModel
-import com.example.habitspark.data.repository.UserPreferencesManager
 import com.example.habitspark.data.repository.UserRepository
+import com.example.habitspark.domain.featureGate.Feature
+import com.example.habitspark.domain.featureGate.FeatureGate
 import com.example.habitspark.ui.components.confirmationDialog.confirmationDialog
 import com.example.habitspark.ui.events.StatsEvent
 import com.example.habitspark.ui.events.StatsEventBus
 import com.example.habitspark.ui.theme.BackgroundColor
-import com.example.habitspark.ui.theme.ButtonBorder
 import com.example.habitspark.ui.theme.PrimaryAccent
 import com.example.habitspark.ui.theme.PrimaryText
 import com.example.habitspark.ui.theme.SecondaryText
@@ -82,7 +79,6 @@ import com.example.habitspark.utils.minutesToHoursMinutes
 import com.example.habitspark.utils.textIconValue
 import com.example.habitspark.utils.xpForNextLevel
 import com.google.firebase.Firebase
-import com.google.firebase.firestore.auth.User
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.launch
 
@@ -204,6 +200,7 @@ fun habitsScreen(
     }
 }
 
+//TODO remove later
 fun addUsers() {
     val userRepository = UserRepository(Firebase.firestore)
 
@@ -291,7 +288,9 @@ fun compactUserHeader(
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                userLevelAndProgressBar(user.xp)
+                FeatureGate(user, Feature.XP) {
+                    userLevelAndProgressBar(user.xp)
+                }
 
             }
 
@@ -301,12 +300,15 @@ fun compactUserHeader(
                 horizontalAlignment = Alignment.Start,
                 modifier = Modifier.weight(0.3f)
             ) {
-                textIconValue(
-                    iconRes = R.drawable.coin_stack,
-                    contentDescription = "Currency",
-                    size = 18.dp,
-                    value = "${user.coin}",
-                )
+                FeatureGate(user, Feature.COINS) {
+                    textIconValue(
+                        iconRes = R.drawable.coin_stack,
+                        contentDescription = "Currency",
+                        size = 18.dp,
+                        value = "${user.coin}",
+                    )
+                }
+
                 textIconValue(
                     iconRes = R.drawable.streak,
                     contentDescription = "Streak",
