@@ -9,6 +9,7 @@ data class AchievementModel(
     val description: String = "",
     val type: AchievementType = AchievementType.HABIT_COUNT,
     val goal: Int = 0,
+    val requirement: Int = 0,
     val rewardType: RewardType = RewardType.XP,
     val reward: Int = 0,
 )

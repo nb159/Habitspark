@@ -3,6 +3,7 @@ package com.example.habitspark.data.repository
 import com.example.habitspark.data.dataTypes.HighlightPurchaseResult
 import com.example.habitspark.data.dataTypes.HighlightStyle
 import com.example.habitspark.data.models.UserModel
+import com.example.habitspark.data.models.metaUserGroupsModel
 import com.google.android.gms.tasks.Task
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentReference
