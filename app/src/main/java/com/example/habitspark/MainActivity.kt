@@ -91,11 +91,13 @@ class MainActivity : ComponentActivity() {
                     if (userId != null) {
                         userViewModel.getUserById(userId)
                     } else {
+                        Log.e("MainActivity", "Sending user to QuestionnaireActivity: No user ID found")
+
                         // No user ID saved (first launch probably)
                         startActivity(Intent(this@MainActivity, QuestionnaireActivity::class.java))
                     }
                 } catch (e: Exception) {
-                    Log.e("MainActivity", "Error loading user or habits", e)
+                    Log.e("MainActivity", "Sending user to QuestionnaireActivity: Error fetching user", e)
                     startActivity(Intent(this@MainActivity, QuestionnaireActivity::class.java))
                 }
             }

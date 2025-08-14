@@ -16,16 +16,19 @@ object StatsCalculator {
     }
 
     fun calculateAverageMood(entries: List<EntryModel>): Float {
+        if (entries.isEmpty()) return 0f
         val total = entries.sumOf { it.moodValue }
         return total.toFloat() / entries.size
     }
 
     fun calculateAverageDifficulty(entries: List<EntryModel>): Float {
+        if (entries.isEmpty()) return 0f
         val total = entries.sumOf { it.difficultyValue }
         return total.toFloat() / entries.size
     }
 
     fun calculateTotalMinutes(entries: List<EntryModel>): Int {
+        if (entries.isEmpty()) return 0
         return entries.sumOf { it.minutesSpent }
     }
 

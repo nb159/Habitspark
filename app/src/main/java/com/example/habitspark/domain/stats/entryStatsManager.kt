@@ -1,6 +1,7 @@
 package com.example.habitspark.domain.stats
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.habitspark.data.dataTypes.AchievementScope
 import com.example.habitspark.data.dataTypes.ActionOperation
@@ -35,6 +36,7 @@ suspend fun onEntryAction(
 
     val entryLocalDate: LocalDate = entry.createdDate.toDate()
         .toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+    Log.d("EntryAction", "Processing entry action: $op")
 
     firestore.runTransaction { tx ->
         val habit = tx.get(habitRef).toObject(HabitModel::class.java) ?: return@runTransaction null
