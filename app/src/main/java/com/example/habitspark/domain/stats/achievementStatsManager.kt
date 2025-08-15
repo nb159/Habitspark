@@ -14,6 +14,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
+import kotlin.math.roundToInt
 
 suspend fun achievementStatsManager(
     userId: String,
@@ -88,7 +89,11 @@ fun isAchievementCompleted(
         AchievementType.ENTRY_COUNT -> metrics.totalEntriesLogged >= achievement.goal
         AchievementType.TIME_SPENT -> metrics.totalMinutesSpent >= achievement.goal
         AchievementType.STREAK -> metrics.streak >= achievement.goal
-        AchievementType.MOOD -> metrics.moodAverage >= achievement.goal
-        AchievementType.DIFFICULTY -> metrics.difficultyAverage >= achievement.goal
+        AchievementType.MOOD ->
+            metrics.totalEntriesLogged >=  achievement.requirement &&
+            metrics.moodAverage.roundToInt() >= achievement.goal
+        AchievementType.DIFFICULTY ->
+            metrics.totalEntriesLogged >= achievement.requirement &&
+            metrics.difficultyAverage.roundToInt() >= achievement.goal
     }
 }

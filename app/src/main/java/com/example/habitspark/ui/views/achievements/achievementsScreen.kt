@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.habitspark.data.dataTypes.AchievementType
 import com.example.habitspark.data.models.AchievementModel
+import com.example.habitspark.data.models.DifficultyLevel
+import com.example.habitspark.data.models.Mood
 import com.example.habitspark.data.models.UserModel
 import com.example.habitspark.domain.featureGate.Feature
 import com.example.habitspark.domain.featureGate.canAccess
@@ -35,6 +37,7 @@ import com.example.habitspark.ui.theme.SurfaceColor
 import com.example.habitspark.ui.views.user.UserViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlin.math.roundToInt
 
 val typeOrder = listOf(
     AchievementType.HABIT_COUNT,
@@ -103,7 +106,8 @@ fun achievementList(
                 currentProgress = currentProgress,
                 isUnlocked = isUnlocked,
                 unlockedAt = unlockedAt,
-                showXp = showXp
+                showXp = showXp,
+                entries = user.metrics.totalEntriesLogged,
             )
         }
     }
@@ -116,8 +120,28 @@ fun achievementItem(
     isUnlocked: Boolean,
     unlockedAt: String? = null,
     showXp: Boolean = false,
+    entries: Int = 0
 ) {
-    val progressPercent = (currentProgress.toFloat() / achievement.goal).coerceIn(0f, 1f)
+    val barProgressPercent = (currentProgress.toFloat() / achievement.goal).coerceIn(0f, 1f)
+
+    val adjustedProgressText = when (achievement.type) {
+            AchievementType.MOOD -> {
+                if (isUnlocked) {
+                    "current: ${Mood.fromValue(currentProgress)?.emoji ?: "N/A"}"
+                } else {
+                    "current: ${Mood.fromValue(currentProgress)?.emoji ?: "N/A"} • entries left: ${(achievement.requirement - entries).coerceAtLeast(0)}"
+
+                }
+            }
+            AchievementType.DIFFICULTY -> {
+                if (isUnlocked) {
+                    "current: ${DifficultyLevel.fromValue(currentProgress)?.label ?: "N/A"}"
+                } else {
+                    "current: ${DifficultyLevel.fromValue(currentProgress)?.label ?: "N/A"} • entries left: ${(achievement.requirement - entries).coerceAtLeast(0)}"
+                }
+            }
+            else -> "$currentProgress / ${achievement.goal}"
+    }
 
     Card(
         modifier = Modifier
@@ -145,7 +169,7 @@ fun achievementItem(
             Spacer(modifier = Modifier.height(8.dp))
 
             LinearProgressIndicator(
-                progress = progressPercent,
+                progress = barProgressPercent,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(6.dp)
@@ -158,14 +182,14 @@ fun achievementItem(
 
 
             val achievementProgressAndReward = buildList {
-                add("$currentProgress / ${achievement.goal}")
+                add(adjustedProgressText)
                 if (showXp) add("${achievement.reward} XP")
                 unlockedAt?.takeIf { it.isNotBlank() }?.let { add(it) }
             }.joinToString(" • ")
 
             Text(
                 text = achievementProgressAndReward,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.bodySmall,
                 color = SecondaryText
             )
         }
@@ -178,7 +202,7 @@ fun getUserProgress(achievement: AchievementModel, user: UserModel): Int {
         AchievementType.ENTRY_COUNT     -> user.metrics.totalEntriesLogged
         AchievementType.STREAK          -> user.metrics.streak
         AchievementType.TIME_SPENT      -> user.metrics.totalMinutesSpent
-        AchievementType.MOOD            -> user.metrics.moodAverage.toInt()
-        AchievementType.DIFFICULTY      -> user.metrics.difficultyAverage.toInt()
+        AchievementType.MOOD            -> user.metrics.moodAverage.roundToInt()
+        AchievementType.DIFFICULTY      -> user.metrics.difficultyAverage.roundToInt()
     }
 }
