@@ -2,10 +2,12 @@ package com.example.habitspark.ui.views.onboarding
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -20,9 +22,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.habitspark.data.dataTypes.PlayerType
 import com.example.habitspark.data.models.UserModel
+import com.example.habitspark.domain.featureGate.UserGroup
 import com.example.habitspark.ui.components.charts.spaceDivider
+import com.example.habitspark.ui.components.toolTip.infoTooltip
 import com.example.habitspark.ui.theme.BackgroundColor
 import com.example.habitspark.ui.theme.PrimaryText
+import com.example.habitspark.ui.theme.SecondaryText
 
 @Composable
 fun offBoardingInformationScreen(
@@ -76,6 +81,16 @@ fun offBoardingInformationScreen(
             color = PrimaryText,
             modifier = Modifier.padding(bottom = 8.dp)
         )
+
+        Row {
+            Text(
+                text = "User Group: ${user.userGroup}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = PrimaryText,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+        }
 
         spaceDivider(40, true, 0.75f)
         Text(

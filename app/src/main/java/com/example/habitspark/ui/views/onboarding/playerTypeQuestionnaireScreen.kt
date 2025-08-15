@@ -1,5 +1,6 @@
 package com.example.habitspark.ui.views.onboarding
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -57,6 +58,8 @@ fun playerTypeQuestionnaireScreen(
 
     var currentIndex by remember { mutableStateOf(0) }
     val answersByType = remember { mutableStateMapOf<String, MutableList<Int>>() }
+    val pageAnswers = remember(currentIndex) { mutableStateMapOf<Int, Pair<String, Int>>() }
+
     val context = LocalContext.current
 
     Box(
@@ -64,6 +67,13 @@ fun playerTypeQuestionnaireScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
+        val currentQuestions = allQuestions.subList(
+            currentIndex,
+            minOf(currentIndex + 3, allQuestions.size)
+        )
+        val pageComplete = currentQuestions.indices.all { i ->
+            pageAnswers.containsKey(currentIndex + i)
+        }
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -84,52 +94,59 @@ fun playerTypeQuestionnaireScreen(
                 modifier = Modifier.padding(bottom = 5.dp)
             )
 
-            val currentQuestions = allQuestions.subList(
-                currentIndex,
-                minOf(currentIndex + 3, allQuestions.size)
-            )
+            currentQuestions.forEachIndexed{ index, item ->
+                val globalIdx = currentIndex + index
 
-            currentQuestions.forEach { item ->
                 QuestionCard(
                     item = item,
                     onAnswerSelected = { type, score ->
-                        val list = answersByType.getOrPut(type) { mutableListOf() }
-                        list.add(score)
+                        pageAnswers[globalIdx] = type to score.coerceIn(1, 7) // overwrite if they change
+
                     }
                 )
             }
         }
 
+
         Button(
             onClick = {
+                if (!pageComplete) {
+                    Toast.makeText(context, "Please answer all questions on this page.", Toast.LENGTH_SHORT).show()
+                    return@Button
+                }
+
+                pageAnswers.values.forEach { (type, score) ->
+                    val list = answersByType.getOrPut(type) { mutableListOf() }
+                    list.add(score) // exactly one per question
+                }
+                Log.d("PlayerTypeQuestionnaire", "Answers by type: $answersByType")
                 if (currentIndex + 3 < allQuestions.size) {
                     currentIndex += 3
                 } else {
-                    val typeAverages = answersByType.mapKeys { (key, _) ->
-                        PlayerType.fromNameOrNull(key) // This gives you the enum from name
-                    }.filterKeys { it != null } // Remove nulls just in case
-                        .mapKeys { it.key!! }    // Safe to unwrap now
-                        .mapValues { (_, scores) ->
-                            if (scores.isNotEmpty()) scores.sum() / scores.size else 0
-                        }
-                    val sorted = typeAverages.entries.sortedByDescending { it.value }
+                    val typeAverages: Map<PlayerType, Double> =
+                        answersByType.mapNotNull { (key, scores) ->
+                            val type = PlayerType.fromNameOrNull(key) ?: return@mapNotNull null
+                            if (scores.isEmpty()) return@mapNotNull null
+                            type to scores.map { it.coerceIn(1, 7) }.average()
+                        }.toMap()
+
+                    val sorted = typeAverages.entries
+                        .sortedWith(compareByDescending<Map.Entry<PlayerType, Double>> { it.value }
+                            .thenBy { it.key.name })
+
                     val primary = sorted.getOrNull(0)?.key
                     val secondary = sorted.getOrNull(1)?.key
-
 
                     if (primary != null && secondary != null) {
                         onNext(PlayerTypeResult(primaryType = primary, secondaryType = secondary))
                     } else {
-                        Toast.makeText(
-                            context,
-                            "Please complete the questionnaire to continue.",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(context, "Please complete the questionnaire to continue.", Toast.LENGTH_SHORT).show()
                         currentIndex = 0
                         answersByType.clear()
                     }
                 }
             },
+            enabled = pageComplete,
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.secondary,
                 contentColor = MaterialTheme.colorScheme.onSecondary
@@ -235,37 +252,37 @@ fun circleButton(number: Int, isSelected: Boolean, onClick: () -> Unit) {
 data class QuestionItem(val type: String, val question: String)
 
 val questionData = mapOf(
-    "Philanthropist" to listOf(
+    PlayerType.PHILANTHROPIST.label to listOf(
         "It makes me happy if I am able to help others.",
         "I like helping others to orient themselves in new situations.",
         "I like sharing my knowledge.",
         "The wellbeing of others is important to me."
     ),
-    "Socialiser" to listOf(
+    PlayerType.SOCIALIZER.label to listOf(
         "Interacting with others is important to me.",
         "I like being part of a team.",
         "It is important to me to feel like I am part of a community.",
         "I enjoy group activities."
     ),
-    "Free Spirit" to listOf(
+    PlayerType.FREE_SPIRIT.label to listOf(
         "It is important to me to follow my own path.",
         "I often let my curiosity guide me.",
         "I like to try new things.",
         "Being independent is important to me."
     ),
-    "Achiever" to listOf(
+    PlayerType.ACHIEVER.label to listOf(
         "I like defeating obstacles.",
         "It is important to me to always carry out my tasks completely.",
         "It is difficult for me to let go of a problem before I have found a solution.",
         "I like mastering difficult tasks."
     ),
-    "Disruptor" to listOf(
+    PlayerType.DISRUPTOR.label to listOf(
         "I like to provoke.",
         "I like to question the status quo.",
         "I see myself as a rebel.",
         "I dislike following rules."
     ),
-    "Player" to listOf(
+    PlayerType.PLAYER.label to listOf(
         "I like competitions where a prize can be won.",
         "Rewards are a great way to motivate me.",
         "Return of investment is important to me.",

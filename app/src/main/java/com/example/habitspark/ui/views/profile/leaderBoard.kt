@@ -163,6 +163,7 @@ fun minutesSpentLeaderboard (
                 if (highlightActive) {
                     animatedGlowName(
                         text = item.name,
+                        isFirst = isFirst,
                         fontSize = fontSize,
                         fontWeight = fontWeight,
                         modifier = Modifier
@@ -185,6 +186,7 @@ fun minutesSpentLeaderboard (
                 if (highlightActive) {
                     animatedGlowName(
                         text = "${minutesToHoursMinutes(item.minutes)} hours",
+                        isFirst = isFirst,
                         fontSize = fontSize,
                         fontWeight = fontWeight,
                         textAlign = TextAlign.End,
@@ -310,6 +312,7 @@ private fun isHighlightActive(row: LeaderboardRow, nowMs: Long = System.currentT
 @Composable
 private fun animatedGlowName(
     text: String,
+    isFirst: Boolean = false,
     fontSize: TextUnit,
     fontWeight: FontWeight,
     textAlign: TextAlign = TextAlign.Start,
@@ -327,14 +330,28 @@ private fun animatedGlowName(
         label = "xAnim"
     )
 
-    // Gold -> orange -> gold sweep
-    val brush = Brush.linearGradient(
-        colors = listOf(
+    // Use a gold sweep for #1, aurora sweep otherwise
+    val gradientColors = if (isFirst) {
+        listOf(
+            Color(0xFFFFD700), // gold
+            Color(0xFFFFC107), // amber
+            Color(0xFFFFF3B0), // light gold highlight
+            Color(0xFFFFA000), // warm orange-gold
+            Color(0xFFFFD700)  // gold
+        )
+    } else {
+        listOf(
             Color(0xFF6C5DD3), // SoftIndigo
             Color(0xFF4C93F7), // ElectricBlue
-            Color(0xFF33E1E1), // Light teal pop (extra)
-            Color(0xFF6C5DD3)  // SoftIndigo again
-        ),
+            Color(0xFF33E1E1), // Teal pop
+            Color(0xFF6C5DD3)  // SoftIndigo
+        )
+    }
+
+    val shadowColor = if (isFirst) Color(0x80FFD700) else Color(0x8033E1E1)
+
+    val brush = Brush.linearGradient(
+        colors = gradientColors,
         start = Offset(x, 0f),
         end = Offset(x + 200f, 0f)
     )
@@ -347,7 +364,7 @@ private fun animatedGlowName(
                 fontSize = fontSize,
                 fontWeight = fontWeight,
                 shadow = Shadow(
-                    color = Color(0x8033E1E1),
+                    color = shadowColor,
                     blurRadius = 18f,
                     offset = Offset(0f, 0f)
                 )

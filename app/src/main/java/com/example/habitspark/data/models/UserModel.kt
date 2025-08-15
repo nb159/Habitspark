@@ -20,6 +20,7 @@ data class UserModel(
     val highlightStyle: String? = null,
     val highlightExpiresAt: Timestamp? = null,
     val createdDate: Timestamp = Timestamp.now(),
+    val surveyCompleted: Boolean = false,
 )
 
 data class UserMetrics(
