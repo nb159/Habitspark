@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AlertDialogDefaults.titleContentColor
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -24,6 +25,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.habitspark.data.dataTypes.FormQuestions
@@ -117,8 +121,17 @@ fun addEntryDialog(
                     }
                 }
 
-                Text("Difficulty", color = SecondaryText)
                 val selectedDifficultyLevel = selectedDifficulty
+//                Text("Difficulty (${selectedDifficulty.label}", color = SecondaryText)
+                Text(
+                    text = buildAnnotatedString {
+                        append("Difficulty")
+                        withStyle(style = SpanStyle(color = selectedDifficultyLevel.color)) {
+                            append(" (${selectedDifficulty.label})")
+                        }
+                    },
+                    color = SecondaryText
+                )
 
                 Slider(
                     value = selectedDifficultyLevel.value.toFloat(),

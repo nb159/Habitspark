@@ -63,7 +63,7 @@ fun introScreen(onNext: () -> Unit) {
 
         item {
             Text(
-                text = "During onboarding, you'll answer a few questions to help us determine your player type.\n",
+                text = "During onboarding, you'll answer a few questions to help us determine your user type.\n",
                 style = MaterialTheme.typography.bodyMedium,
                 color = PrimaryText,
             )

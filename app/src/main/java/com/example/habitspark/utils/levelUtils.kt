@@ -22,7 +22,7 @@ fun calculateXPFromEntry(minutesSpent: Int): Int {
     return (minutesSpent / 10) // 1 XP per 10 minutes
 }
 
-fun calculateEntryCoins(minutesSpent: Int): Int {
+fun calculateCoinsFromEntry(minutesSpent: Int): Int {
     val m = maxOf(0, minutesSpent)
 
     // Base rate: 1 coin per 12 min for the first 120 min

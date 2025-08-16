@@ -41,12 +41,12 @@ enum class RewardType(val label: String) {
 }
 
 enum class PlayerType(val label: String, val description: String) {
-    ACHIEVER("Achiever", "Love challenges and mastery"),
-    PLAYER("Player", "Motivated by rewards"),
-    SOCIALIZER("Socializer", "Enjoy social interaction"),
-    PHILANTHROPIST("Philanthropist", "Value helping others"),
-    FREE_SPIRIT("Free Spirit", "Crave creativity and autonomy"),
-    DISRUPTOR("Disruptor", "Like changing or challenging the system"),
+    ACHIEVER("Achiever", "Loves challenges and mastery"),
+    PLAYER("Player", "Is motivated by rewards"),
+    SOCIALIZER("Socializer", "Enjoys social interaction"),
+    PHILANTHROPIST("Philanthropist", "Values helping others"),
+    FREE_SPIRIT("Free Spirit", "Craves creativity and autonomy"),
+    DISRUPTOR("Disruptor", "Likes changing or challenging the system"),
     UNKNOWN("Unknown", "No specific type");
 
     companion object {

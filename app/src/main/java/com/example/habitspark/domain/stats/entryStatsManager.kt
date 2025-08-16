@@ -14,12 +14,13 @@ import com.example.habitspark.data.repository.HabitRepository
 import com.example.habitspark.data.repository.UserRepository
 import com.example.habitspark.domain.stats.StatsCalculator.updateAverageDouble
 import com.example.habitspark.domain.stats.StatsCalculator.updateAverageFloat
-import com.example.habitspark.utils.calculateEntryCoins
+import com.example.habitspark.utils.calculateCoinsFromEntry
 import com.example.habitspark.utils.calculateXPFromEntry
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.auth.User
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
@@ -113,7 +114,15 @@ suspend fun onEntryAction(
         val userNewAvgMood = updateAverageFloat(metrics.moodAverage, moodSample, userOldEntryCount, op)
         val userNewAvgDifficulty = updateAverageFloat(metrics.difficultyAverage, difficultySample, userOldEntryCount, op)
 
+        val userNewXp = when (op) {
+            ActionOperation.ADD    -> user.xp + calculateXPFromEntry(entry.minutesSpent)
+            ActionOperation.DELETE -> (user.xp - calculateXPFromEntry(entry.minutesSpent)).coerceAtLeast(0)
+        }
 
+        val userNewCoins = when (op) {
+            ActionOperation.ADD    -> user.coin + calculateCoinsFromEntry(entry.minutesSpent)
+            ActionOperation.DELETE -> user.coin - calculateCoinsFromEntry(entry.minutesSpent) // allow negative
+        }
 
         val userPatch = mutableMapOf<String, Any>(
             UserModel::metrics.name + "." + UserMetrics::totalEntriesLogged.name to userNewEntryCount,
@@ -121,6 +130,8 @@ suspend fun onEntryAction(
             UserModel::metrics.name + "." + UserMetrics::averageSessionMinutes.name to userNewAvgSession,
             UserModel::metrics.name + "." + UserMetrics::moodAverage.name to userNewAvgMood,
             UserModel::metrics.name + "." + UserMetrics::difficultyAverage.name to userNewAvgDifficulty,
+            UserModel::xp.name to userNewXp,
+            UserModel::coin.name to userNewCoins
         )
         if (op == ActionOperation.ADD) {
             // Streak/lastEntryAt only on ADD (cheap). On DELETE: skip; recompute after.
@@ -133,7 +144,7 @@ suspend fun onEntryAction(
                 else -> 1
             }
             val userNewXp = user.xp + calculateXPFromEntry(entry.minutesSpent)
-            val userNewCoins = user.coin + calculateEntryCoins(entry.minutesSpent)
+            val userNewCoins = user.coin + calculateCoinsFromEntry(entry.minutesSpent)
 
             userPatch[UserModel::xp.name] = userNewXp
             userPatch[UserModel::coin.name] = userNewCoins

@@ -71,6 +71,8 @@ import com.example.habitspark.ui.theme.ElectricBlue
 import com.example.habitspark.ui.theme.PrimaryText
 import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.theme.SurfaceColor
+import com.example.habitspark.utils.calculateCoinsFromEntry
+import com.example.habitspark.utils.calculateXPFromEntry
 import com.example.habitspark.utils.minutesToDecimalHours
 import com.example.habitspark.utils.minutesToHoursMinutes
 import com.example.habitspark.utils.saveToCacheAndGetUri
@@ -134,7 +136,7 @@ fun habitDetailsScreen(
             if (selectedView == "Entries") {
                 entryList(entries) { entry -> entryToDelete = entry }
             } else {
-                habitStatistics(habit, entries)
+                habitStatistics(habit, entries, user)
             }
 
             if (showDialog) {
@@ -270,7 +272,7 @@ fun habitHeader(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     textIconValue(iconRes = R.drawable.clock, tint = Color.White, value = "${minutesToHoursMinutes(habit.totalMinutes)} hrs")
-                    textIconValue(iconRes = R.drawable.streak, value = "${habit.currentStreak} days")
+                    textIconValue(iconRes = R.drawable.streak, value = "${habit.currentStreak} day(s)")
                 }
             }
         }
@@ -445,7 +447,11 @@ fun entryItem(entry: EntryModel, onEntryDelete: (entry: EntryModel) -> Unit = {}
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun habitStatistics(habit: HabitModel?, entries: List<EntryModel>) {
+fun habitStatistics(
+    habit: HabitModel?,
+    entries: List<EntryModel>,
+    user: UserModel
+    ) {
     if (habit == null) return
 
 
@@ -483,7 +489,7 @@ fun habitStatistics(habit: HabitModel?, entries: List<EntryModel>) {
                 text = "Highest ",
                 iconRes = R.drawable.streak,
                 contentDescription = "Highest Streak",
-                value = ": ${habit.highestStreak} Days",
+                value = ": ${habit.highestStreak} Day(s)",
                 tint = Color.Unspecified
             )
             textIconValue(
@@ -512,7 +518,28 @@ fun habitStatistics(habit: HabitModel?, entries: List<EntryModel>) {
                 value = averageDifficulty?.label ?: "N/A",
                 valueColor = averageDifficulty?.color ?: PrimaryText
             )
+        }
 
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FeatureGate(user, Feature.COINS) {
+                textIconValue(
+                    text = "Gained ",
+                    iconRes = R.drawable.coin_stack,
+                    contentDescription = "Coins gained from habit",
+                    value = ": ${calculateCoinsFromEntry(habit.totalMinutes)}"
+                )
+            }
+            FeatureGate(user, Feature.XP) {
+                textIconValue(
+                    text = "XP gained: ",
+                    contentDescription = "XP gained from habit",
+                    value = calculateXPFromEntry(habit.totalMinutes).toString(),
+                )
+            }
 
         }
 

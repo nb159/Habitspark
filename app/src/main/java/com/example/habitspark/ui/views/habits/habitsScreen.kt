@@ -240,7 +240,7 @@ fun compactUserHeader(
                         iconRes = R.drawable.coin_stack,
                         contentDescription = "Currency",
                         size = 18.dp,
-                        value = "${user.coin}",
+                        value = "${user.coin}" + if (user.coin < 0) " Owed" else "",
                     )
                 }
 
@@ -248,7 +248,7 @@ fun compactUserHeader(
                     iconRes = R.drawable.streak,
                     contentDescription = "Streak",
                     size = 18.dp,
-                    value = "${user.metrics.streak} Days",
+                    value = "${user.metrics.streak} Day(s)",
                 )
                 textIconValue(
                     iconRes = R.drawable.clock,
@@ -378,6 +378,9 @@ fun habitItem(
     onHabitDelete: (habit: HabitModel) -> Unit = {},
     onAddEntryClicked: (habitId: String) -> Unit = {},
 ) {
+    val completed =
+        habit.totalMinutes >= habit.goalTarget * 60 ||
+        habit.totalEntries >= habit.goalTarget
     val totalHabitHours =  minutesToHoursMinutes(habit.totalMinutes)
     val dismissState = rememberDismissState(
         confirmValueChange = { dismissValue ->
@@ -461,7 +464,7 @@ fun habitItem(
                     ) {
                         Text(
                             text = habit.name,
-                            color = PrimaryText,
+                            color = if (completed) Color.Green else PrimaryText,
                             style = MaterialTheme.typography.bodyLarge
                         )
 

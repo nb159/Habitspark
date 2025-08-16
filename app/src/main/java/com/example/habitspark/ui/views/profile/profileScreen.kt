@@ -330,13 +330,13 @@ fun accountInformation(
                     text = "Current ",
                     iconRes = R.drawable.streak,
                     size = 16.dp,
-                    value = user.metrics.streak.toString()
+                    value = ": ${user.metrics.streak} day(s)"
                 )
                 textIconValue(
                     text = "Longest ",
                     iconRes = R.drawable.streak,
                     size = 16.dp,
-                    value = user.metrics.highestStreak.toString()
+                    value = ": ${user.metrics.streak} day(s)"
                 )
             }
         }
