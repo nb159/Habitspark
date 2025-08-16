@@ -332,16 +332,11 @@ fun DrawerContent(
                     route = Screen.Survey.route,
                     currentRoute = currentRoute,
                     onClick = onDestinationClicked,
-    //                unlockAtMs = unlockForSurvey
+                    unlockAtMs = unlockAtMs
                 )
             }
             Spacer(modifier = Modifier.weight(1f))
 
-            Text(
-                text = "v1.0.0",
-                color = SecondaryText,
-                style = MaterialTheme.typography.bodySmall
-            )
         }
     }
 }

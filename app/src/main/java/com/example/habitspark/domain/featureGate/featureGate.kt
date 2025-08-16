@@ -28,10 +28,10 @@ enum class UserGroup(val label: String) {
 }
 
 val TYPE_RULES: Map<PlayerType, Set<Feature>> = mapOf(
-    PlayerType.ACHIEVER   to setOf(Feature.ACHIEVEMENTS, Feature.XP),
+    PlayerType.ACHIEVER   to setOf(Feature.ACHIEVEMENTS, Feature.XP, Feature.ADVANCED_HABIT_STATS),
     PlayerType.PLAYER   to setOf(Feature.ACHIEVEMENTS, Feature.LEADERBOARD),
-    PlayerType.FREE_SPIRIT to setOf(Feature.ACHIEVEMENTS),
-    PlayerType.PHILANTHROPIST to setOf(),
+    PlayerType.FREE_SPIRIT to setOf(Feature.ACHIEVEMENTS, Feature.ADVANCED_HABIT_STATS),
+    PlayerType.PHILANTHROPIST to setOf(Feature.ADVANCED_HABIT_STATS),
     PlayerType.SOCIALIZER to setOf(Feature.COINS, Feature.HIGHLIGHT_PURCHASE, Feature.LEADERBOARD),
     PlayerType.DISRUPTOR to setOf(),
 )

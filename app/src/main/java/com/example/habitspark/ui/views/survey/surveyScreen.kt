@@ -1,5 +1,7 @@
 package com.example.habitspark.ui.views.survey
 
+import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,10 +25,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -49,6 +53,7 @@ fun surveyScreen(
     }
 
     val uriHandler = LocalUriHandler.current
+    val email = "heshamalhuraibi1@gmail.com"
     val clipboard = LocalClipboardManager.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -71,15 +76,42 @@ fun surveyScreen(
 
             // 2. Survey completed
             user?.surveyCompleted == true -> {
-                Text(
-                    text = "Thank you for participating in this study.\nYour assistance is greatly appreciated!",
-                    style = MaterialTheme.typography.titleMedium,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(16.dp)
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth().padding(16.dp)
+                ) {
+                    Text(
+                        text = "Thank you for participating in this study.\nYour assistance is greatly appreciated!",
+                        style = MaterialTheme.typography.titleMedium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                    spaceDivider(height = 30)
+                    Text(
+                        text = "In the event of any unexpected issues, please contact me at",
+                        style = MaterialTheme.typography.titleSmall,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = email,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        textAlign = TextAlign.Center,
+                        textDecoration = TextDecoration.Underline,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                clipboard.setText(AnnotatedString(email))
+                                coroutineScope.launch {
+                                    StatsEventBus.emit(StatsEvent.TextCopied("Email address copied to clipboard!"))
+                                }
+                            }
+                    )
+                }
             }
 
-            // 3. Survey not completed (your original UI)
+            // 3. Survey not completed
             else -> {
                 Column(
                     modifier = Modifier
@@ -123,12 +155,14 @@ fun surveyScreen(
                             textAlign = TextAlign.Center
                         )
                         Spacer(Modifier.height(12.dp))
+
                         Button(
                             onClick = {
                                 uriHandler.openUri(
-                                    "https://docs.google.com/forms/d/e/1FAIpQLSdM779Or5mM3X0JUkfdCePmUIs1Tfs22d3nfnUGskQW6FgvCg/viewform?usp=pp_url&entry.1233052653=${user?.id}"
+                                    "https://docs.google.com/forms/d/e/1FAIpQLSdM779Or5mM3X0JUkfdCePmUIs1Tfs22d3nfnUGskQW6FgvCg/viewform?usp=pp_url&entry.1425140502=${user?.id}"
                                 )
                                 coroutineScope.launch {
+                                Log.d("SurveyScreen", "Redirecting to survey ${user?.id}")
                                     userViewModel.updateUser(user!!.copy(surveyCompleted = true))
                                 }
                             },
@@ -158,8 +192,8 @@ fun surveyScreen(
                         Button(
                             onClick = {
                                 clipboard.setText(
-                                    androidx.compose.ui.text.AnnotatedString(
-                                        "https://docs.google.com/forms/d/e/1FAIpQLSdM779Or5mM3X0JUkfdCePmUIs1Tfs22d3nfnUGskQW6FgvCg/viewform?usp=pp_url&entry.1233052653=${user?.id}"
+                                    AnnotatedString(
+                                        "https://docs.google.com/forms/d/e/1FAIpQLSdM779Or5mM3X0JUkfdCePmUIs1Tfs22d3nfnUGskQW6FgvCg/viewform?usp=pp_url&entry.1425140502=${user?.id}"
                                     )
                                 )
                                 coroutineScope.launch {
