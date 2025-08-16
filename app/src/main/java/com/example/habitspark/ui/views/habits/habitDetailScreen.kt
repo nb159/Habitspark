@@ -18,16 +18,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -39,14 +43,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.core.view.drawToBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.habitspark.R
 import com.example.habitspark.data.dataTypes.GoalType
@@ -59,11 +67,14 @@ import com.example.habitspark.domain.featureGate.Feature
 import com.example.habitspark.domain.featureGate.FeatureGate
 import com.example.habitspark.ui.components.charts.barChart
 import com.example.habitspark.ui.components.confirmationDialog.confirmationDialog
+import com.example.habitspark.ui.theme.ElectricBlue
 import com.example.habitspark.ui.theme.PrimaryText
 import com.example.habitspark.ui.theme.SecondaryText
 import com.example.habitspark.ui.theme.SurfaceColor
 import com.example.habitspark.utils.minutesToDecimalHours
 import com.example.habitspark.utils.minutesToHoursMinutes
+import com.example.habitspark.utils.saveToCacheAndGetUri
+import com.example.habitspark.utils.shareImageUri
 import com.example.habitspark.utils.textIconValue
 import ir.ehsannarmani.compose_charts.extensions.format
 import kotlinx.coroutines.launch
@@ -114,7 +125,7 @@ fun habitDetailsScreen(
                 .padding(padding)
                 .padding(16.dp),
         ) {
-            habit?.let {  habitHeader(it) }
+            habit?.let {  habitHeader(it, user, selectedView) }
             FeatureGate(user = user, feature = Feature.ADVANCED_HABIT_STATS) {
                 ViewSwitcher(selectedView = selectedView, onViewChange = { selectedView = it })
             }
@@ -155,7 +166,26 @@ fun habitDetailsScreen(
 }
 
 @Composable
-fun habitHeader(habit: HabitModel) {
+fun habitHeader(
+    habit: HabitModel,
+    user: UserModel,
+    selectedView: String
+) {
+
+    val context = LocalContext.current
+    val rootView = LocalView.current
+
+    val showShareButton = remember { mutableStateOf(true) }
+
+    LaunchedEffect(showShareButton.value, selectedView) {
+        if (!showShareButton.value && selectedView == "Statistics") {
+            withFrameNanos { }            // wait 1 frame (to allow Compose to hide the share button)
+            val bmp = rootView.drawToBitmap()
+            val uri = saveToCacheAndGetUri(context, bmp, "habitspark_stats.png")
+            shareImageUri(context, uri, "Share HabitSpark stats")
+            showShareButton.value = true
+        }
+    }
 
     val progressText = when(habit.goalType) {
         GoalType.HOURS -> {
@@ -188,11 +218,32 @@ fun habitHeader(habit: HabitModel) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Title
-            Text(
-                text = habit.name,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ){
+                Text(
+                    text = habit.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                FeatureGate(user = user, feature = Feature.ADVANCED_HABIT_STATS_SHARE){
+                    if (selectedView == "Statistics" && showShareButton.value) {
+                        FilledIconButton(
+                            onClick = { showShareButton.value = false },
+                            modifier = Modifier.size(32.dp), // try 32–36dp
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = ElectricBlue.copy(alpha = 0.8f),
+                                contentColor = Color.White
+                            ),
+                            shape = CircleShape
+                        ) {
+                            Icon(Icons.Filled.Share, contentDescription = "Share", modifier = Modifier.size(16.dp))
+                        }
+                    }
+                }
+            }
+
             Text(
                 text = habit.description,
                 style = MaterialTheme.typography.bodyMedium,
@@ -422,6 +473,7 @@ fun habitStatistics(habit: HabitModel?, entries: List<EntryModel>) {
             .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,

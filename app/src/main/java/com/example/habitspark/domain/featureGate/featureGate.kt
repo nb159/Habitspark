@@ -12,6 +12,7 @@ enum class Feature {
     ACHIEVEMENTS,
     HIGHLIGHT_PURCHASE,
     ADVANCED_HABIT_STATS,
+    ADVANCED_HABIT_STATS_SHARE,
     // add only non-base features here
 }
 
@@ -31,7 +32,7 @@ val TYPE_RULES: Map<PlayerType, Set<Feature>> = mapOf(
     PlayerType.ACHIEVER   to setOf(Feature.ACHIEVEMENTS, Feature.XP, Feature.ADVANCED_HABIT_STATS),
     PlayerType.PLAYER   to setOf(Feature.ACHIEVEMENTS, Feature.LEADERBOARD),
     PlayerType.FREE_SPIRIT to setOf(Feature.ACHIEVEMENTS, Feature.ADVANCED_HABIT_STATS),
-    PlayerType.PHILANTHROPIST to setOf(Feature.ADVANCED_HABIT_STATS),
+    PlayerType.PHILANTHROPIST to setOf(Feature.ADVANCED_HABIT_STATS, Feature.ADVANCED_HABIT_STATS_SHARE),
     PlayerType.SOCIALIZER to setOf(Feature.COINS, Feature.HIGHLIGHT_PURCHASE, Feature.LEADERBOARD),
     PlayerType.DISRUPTOR to setOf(),
 )
@@ -48,11 +49,6 @@ fun effectiveFeatures(user: UserModel): Set<Feature> {
 
     //return TYPE_RULES[primary].orEmpty() union TYPE_RULES[secondary].orEmpty()
     return TYPE_RULES[primary].orEmpty()
-
-    // Optional: per-user overrides if you ever add a field on the user
-        // user.enabledFeatures?.forEach { s ->
-        //   runCatching { Feature.valueOf(s.trim().uppercase()) }.getOrNull()?.let { add(it) }
-        // }
 
 }
 
