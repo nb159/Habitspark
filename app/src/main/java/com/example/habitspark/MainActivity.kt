@@ -115,54 +115,8 @@ class MainActivity : ComponentActivity() {
                     startActivity(Intent(this@MainActivity, QuestionnaireActivity::class.java))
                 }
             }
-//            data class SeedAchievement(
-//                val id: String,
-//                val title: String,
-//                val description: String,
-//                val type: String,
-//                val goal: Int,
-//                val rewardType: String,
-//                val reward: Int,
-//            )
-//            val achievements = listOf(
-//                SeedAchievement("habit_5", "Habit Collector", "Create 5 habits", "HABIT_COUNT", 5, "XP", 100),
-//                SeedAchievement("habit_10", "Life Architect", "Create 10 habits", "HABIT_COUNT", 10, "XP", 200),
-//
-//                SeedAchievement("entry_5", "First Steps", "Log 5 habit entries", "ENTRY_COUNT", 5, "XP", 50),
-//                SeedAchievement("entry_15", "Momentum", "Log 15 habit entries", "ENTRY_COUNT", 15, "XP", 120),
-//                SeedAchievement("entry_30", "Consistency Master", "Log 30 habit entries", "ENTRY_COUNT", 30, "XP", 250),
-//
-//                SeedAchievement("streak_3", "3-Day Streak", "Maintain a 3-day habit streak", "STREAK", 3, "XP", 60),
-//                SeedAchievement("streak_7", "One Full Week", "Maintain a 7-day habit streak", "STREAK", 7, "XP", 150),
-//                SeedAchievement("streak_21", "Unbreakable", "Maintain a 21-day habit streak", "STREAK", 21, "XP", 400),
-//
-//                SeedAchievement("time_60", "One Hour In", "Spend 60 minutes on habits", "TIME_SPENT", 60, "XP", 40),
-//                SeedAchievement("time_300", "5-Hour Focus", "Spend 300 minutes on habits", "TIME_SPENT", 300, "XP", 120),
-//                SeedAchievement("time_1000", "Time Investor", "Spend 1000 minutes on habits", "TIME_SPENT", 1000, "XP", 250),
-//
-//                SeedAchievement("mood_10_positive", "Feeling Good", "Log 10 entries with a happy mood", "MOOD", 10, "XP", 80),
-//                SeedAchievement("mood_25_positive", "Optimist", "Log 25 entries with a happy mood", "MOOD", 25, "XP", 180),
-//
-//                SeedAchievement("difficulty_10_high", "Challenge Accepted", "Complete 10 entries marked Hard or above", "DIFFICULTY", 10, "XP", 90),
-//                SeedAchievement("difficulty_30_high", "Through the Fire", "Complete 30 entries marked Hard or above", "DIFFICULTY", 30, "XP", 200)
-//            )
-//            fun seedAchievementsToFirestore() {
-//                val tempDb = Firebase.firestore.collection("achievements")
-//
-//                achievements.forEach { achievement ->
-//                    tempDb.document(achievement.id).set(achievement)
-//                        .addOnSuccessListener {
-//                            Log.d("SeedAchievements", "Added: ${achievement.id}")
-//                        }
-//                        .addOnFailureListener { e ->
-//                            Log.e("SeedAchievements", "Error adding ${achievement.id}", e)
-//                        }
-//                }
-//            }
-
             HabitSparkTheme {
                 if (user != null) {
-//                    seedAchievementsToFirestore()
 
                     val navController = rememberNavController()
                     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -292,9 +246,7 @@ fun DrawerContent(
     currentRoute: String? = null,
     user: UserModel,
 ) {
-    //TODO uncomment for prod
-//    val unlockAtMs = (user.createdDate?.toDate()?.time ?: 0L) + 36L * 60L * 60L * 1000L
-    val unlockAtMs = (user.createdDate?.toDate()?.time ?: 0L) + TimeUnit.MINUTES.toMillis(5)
+    val unlockAtMs = (user.createdDate?.toDate()?.time ?: 0L) + TimeUnit.HOURS.toMillis(36)
 
     Column(
         modifier = Modifier
