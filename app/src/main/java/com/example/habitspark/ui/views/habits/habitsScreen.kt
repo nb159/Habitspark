@@ -454,13 +454,7 @@ fun habitItem(
                         .fillMaxSize()
                         .padding(horizontal = 16.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(PrimaryAccent, shape = RoundedCornerShape(8.dp))
-                    )
 
-                    Spacer(modifier = Modifier.width(16.dp))
 
                     Column(
                         modifier = Modifier.weight(1f)

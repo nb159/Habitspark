@@ -32,7 +32,7 @@ val TYPE_RULES: Map<PlayerType, Set<Feature>> = mapOf(
     PlayerType.PLAYER   to setOf(Feature.ACHIEVEMENTS, Feature.LEADERBOARD),
     PlayerType.FREE_SPIRIT to setOf(Feature.ACHIEVEMENTS),
     PlayerType.PHILANTHROPIST to setOf(),
-    PlayerType.SOCIALIZER to setOf(Feature.COINS, Feature.HIGHLIGHT_PURCHASE),
+    PlayerType.SOCIALIZER to setOf(Feature.COINS, Feature.HIGHLIGHT_PURCHASE, Feature.LEADERBOARD),
     PlayerType.DISRUPTOR to setOf(),
 )
 

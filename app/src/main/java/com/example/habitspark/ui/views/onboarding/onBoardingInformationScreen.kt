@@ -135,8 +135,8 @@ fun introScreen(onNext: () -> Unit) {
         }
         item {
             Text(
-                text = "\nNote: After 2 days of using the app, a feedback section will become available in the drawer menu. There, you’ll be asked a few short questions to " +
-                        "complete the testing process. Your input will help evaluate the effectiveness of personalization in HabitSpark.",
+                text = "\nNote: After a day and half (36 hours) of creating your account, a feedback section will become available in the drawer menu. There, you can open a short Google Form to share your experience. " +
+                        "Your input will help evaluate the effectiveness of personalization in HabitSpark.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = PrimaryText,
             )
