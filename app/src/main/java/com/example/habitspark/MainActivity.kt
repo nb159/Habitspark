@@ -10,6 +10,7 @@ import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -41,9 +42,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -58,6 +62,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.habitspark.data.models.UserModel
 import com.example.habitspark.data.repository.UserPreferencesManager
 import com.example.habitspark.ui.events.HasMessage
 import com.example.habitspark.ui.events.StatsEventBus
@@ -70,9 +75,12 @@ import com.example.habitspark.ui.views.achievements.achievementsScreen
 import com.example.habitspark.ui.views.habits.habitDetailsScreen
 import com.example.habitspark.ui.views.habits.habitsScreen
 import com.example.habitspark.ui.views.profile.profileScreen
+import com.example.habitspark.ui.views.survey.surveyScreen
 import com.example.habitspark.ui.views.user.UserViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
 
@@ -83,13 +91,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val userViewModel = UserViewModel()
-            val user by userViewModel.user
+            val user by userViewModel.userListener.collectAsState()
             lifecycleScope.launch {
                 try {
                     val userId = UserPreferencesManager.getUserId(this@MainActivity).first()
 
                     if (userId != null) {
-                        userViewModel.getUserById(userId)
+                        userViewModel.startUser(userId)
                     } else {
                         Log.e("MainActivity", "Sending user to QuestionnaireActivity: No user ID found")
 
@@ -172,7 +180,8 @@ class MainActivity : ComponentActivity() {
                                         drawerState.close()
                                         navController.navigate(route)
                                     }},
-                                currentRoute = currentBackStackEntry?.destination?.route
+                                currentRoute = currentBackStackEntry?.destination?.route,
+                                user = user!!, // Ensure user is not null here
                             )
                         },
                         drawerState = drawerState,
@@ -243,6 +252,9 @@ class MainActivity : ComponentActivity() {
                                 composable(Screen.Profile.route) {
                                     profileScreen(userId = user!!.id,)
                                 }
+                                composable(Screen.Survey.route) {
+                                    surveyScreen(userId = user!!.id)
+                                }
                             }
                         }
                     }
@@ -255,9 +267,15 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun DrawerContent(
     onDestinationClicked: (String) -> Unit,
-    currentRoute: String? = null
+    currentRoute: String? = null,
+    user: UserModel,
 ) {
     val drawerWidth = LocalConfiguration.current.screenWidthDp.dp * 0.70f
+
+    //TODO uncomment for prod
+//    val unlockAtMs = (user.createdDate?.toDate()?.time ?: 0L) + 36L * 60L * 60L * 1000L
+    val unlockAtMs = (user.createdDate?.toDate()?.time ?: 0L) + TimeUnit.MINUTES.toMillis(5)
+
 
     Surface(
         modifier = Modifier
@@ -289,7 +307,16 @@ fun DrawerContent(
             DrawerItem("Profile", Screen.Profile.route, currentRoute, onDestinationClicked)
             DrawerItem("Habits", Screen.Habits.route, currentRoute, onDestinationClicked)
             DrawerItem("Achievements", Screen.Achievements.route, currentRoute, onDestinationClicked)
-
+            // 🔒 Survey: locked until duartionToOpenSurvey == 0
+            if (!user.surveyCompleted) {
+                DrawerItem(
+                    label = "Survey",
+                    route = Screen.Survey.route,
+                    currentRoute = currentRoute,
+                    onClick = onDestinationClicked,
+    //                unlockAtMs = unlockForSurvey
+                )
+            }
             Spacer(modifier = Modifier.weight(1f))
 
             Text(
@@ -300,7 +327,95 @@ fun DrawerContent(
         }
     }
 }
+@Composable
+fun DrawerItem(
+    label: String,
+    route: String,
+    currentRoute: String?,
+    onClick: (String) -> Unit,
+    unlockAtMs: Long = 0L
+) {
+    val isSelected = when {
+        currentRoute == null -> false
+        route == Screen.Habits.route && currentRoute.startsWith("habitDetail") -> true
+        else -> currentRoute == route
+    }
+    val baseBackground = if (isSelected) PrimaryAccent.copy(alpha = 0.1f) else Color.Transparent
 
+    // remaining time (ms) until unlock; derived from absolute unlockAtMs
+    var remainingMs by remember(unlockAtMs) {
+        mutableStateOf(((unlockAtMs - System.currentTimeMillis()).coerceAtLeast(0L)))
+    }
+    val isLocked = remainingMs > 0L
+
+    LaunchedEffect(unlockAtMs) {
+        if (unlockAtMs <= 0L) {
+            remainingMs = 0L
+            return@LaunchedEffect
+        }
+        while (true) {
+            val rem = (unlockAtMs - System.currentTimeMillis()).coerceAtLeast(0L)
+            remainingMs = rem
+            if (rem == 0L) break
+            // Cheap: minute ticks when far away, second ticks in the last hour
+            val nextDelay = if (rem > 3_600_000L) 60_000L else 1_000L
+            delay(nextDelay)
+        }
+    }
+
+
+    val textColor = when {
+        isLocked -> SecondaryText.copy(alpha = 0.7f)
+        isSelected -> PrimaryAccent
+        else -> PrimaryText
+    }
+
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(baseBackground, shape = RoundedCornerShape(25.dp))
+            .clickable(enabled = !isLocked) { onClick(route) }
+            .padding(vertical = 12.dp, horizontal = 16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                color = textColor,
+                style = MaterialTheme.typography.bodyLarge
+            )
+
+            if (isLocked) {
+                Text(
+                    text = formatRemaining(remainingMs),
+                    color = SecondaryText,
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+        }
+    }
+
+    Spacer(modifier = Modifier.height(8.dp))
+}
+
+private fun formatRemaining(ms: Long): String {
+    val totalSec = ((ms + 999) / 1000).toInt() // round up
+    val days = totalSec / 86_400
+    val hours = (totalSec % 86_400) / 3_600
+    val minutes = (totalSec % 3_600) / 60
+    val seconds = totalSec % 60
+
+    return when {
+        days > 0      -> "${days}d ${hours}h"
+        hours > 0     -> "${hours}h ${minutes}m"
+        minutes > 0   -> String.format("%02d:%02d", minutes, seconds)
+        else          -> String.format("00:%02d", seconds)
+    }
+}
 
 @Composable
 fun customSnackbar(data: SnackbarData) {
@@ -334,40 +449,6 @@ fun customSnackbar(data: SnackbarData) {
     }
 }
 
-
-
-@Composable
-fun DrawerItem(
-    label: String,
-    route: String,
-    currentRoute: String?,
-    onClick: (String) -> Unit
-) {
-    val isSelected = when {
-        currentRoute == null -> false
-        route == Screen.Habits.route && currentRoute.startsWith("habitDetail") -> true
-        else -> currentRoute == route
-    }
-    val background = if (isSelected) PrimaryAccent.copy(alpha = 0.1f) else Color.Transparent
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(background, shape = RoundedCornerShape(25.dp))
-            .clickable { onClick(route) }
-            .padding(vertical = 12.dp, horizontal = 16.dp)
-    ) {
-        Text(
-            text = label,
-            color = if (isSelected) PrimaryAccent else PrimaryText,
-            style = MaterialTheme.typography.bodyLarge
-        )
-    }
-
-    Spacer(modifier = Modifier.height(8.dp))
-}
-
-
 sealed class Screen(val route: String, val label: String = "") {
     object Habits : Screen("habits", "Habits")
     object HabitDetail : Screen("habitDetail/{habitId}", "Habits/Detail") {
@@ -375,6 +456,7 @@ sealed class Screen(val route: String, val label: String = "") {
     }
     object Achievements : Screen("achievements", "Achievements")
     object Profile: Screen("profile", "Profile")
+    object Survey: Screen("survey", "Survey")
 }
 fun getScreenLabel(route: String?): String {
     return when {
@@ -382,6 +464,7 @@ fun getScreenLabel(route: String?): String {
         route == Screen.Habits.route -> Screen.Habits.label
         route == Screen.Achievements.route -> Screen.Achievements.label
         route == Screen.Profile.route -> Screen.Profile.label
+        route == Screen.Survey.route -> Screen.Survey.label
         else -> "Home"
     }
 }

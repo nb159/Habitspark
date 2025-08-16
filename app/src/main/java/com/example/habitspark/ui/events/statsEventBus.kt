@@ -9,6 +9,7 @@ sealed class StatsEvent {
     data class AchievementUnlocked(override val message: String) : StatsEvent(), HasMessage
     data object UserDataChanged : StatsEvent()
     data class HighlightPurchased(override val message: String) : StatsEvent(), HasMessage
+    data class TextCopied(override val message: String) : StatsEvent(), HasMessage
 }
 object StatsEventBus {
     private val _events = MutableSharedFlow<StatsEvent>()

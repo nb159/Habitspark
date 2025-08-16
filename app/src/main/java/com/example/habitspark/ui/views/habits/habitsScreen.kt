@@ -60,9 +60,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.habitspark.R
 import com.example.habitspark.data.models.HabitModel
 import com.example.habitspark.data.models.Mood
-import com.example.habitspark.data.models.UserMetrics
 import com.example.habitspark.data.models.UserModel
-import com.example.habitspark.data.repository.UserRepository
 import com.example.habitspark.domain.featureGate.Feature
 import com.example.habitspark.domain.featureGate.FeatureGate
 import com.example.habitspark.ui.components.confirmationDialog.confirmationDialog
@@ -78,8 +76,6 @@ import com.example.habitspark.utils.calculateLevelFromXP
 import com.example.habitspark.utils.minutesToHoursMinutes
 import com.example.habitspark.utils.textIconValue
 import com.example.habitspark.utils.xpForNextLevel
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.launch
 
 
@@ -136,16 +132,6 @@ fun habitsScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-//            Button(
-//                onClick = { addUsers() },
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .height(48.dp),
-//
-//                ) {
-//                Text(text = "add Users")
-//            }
-
             user?.let { compactUserHeader(user = it) }
 
             Spacer(modifier = Modifier.height(30.dp))
@@ -199,57 +185,6 @@ fun habitsScreen(
 
     }
 }
-
-//TODO remove later
-fun addUsers() {
-    val userRepository = UserRepository(Firebase.firestore)
-
-    val testUsers = listOf(
-        UserModel(
-            id = "", // Firestore will auto-generate if you leave blank in repo
-            name = "testUser1",
-            age = 20,
-            email = "testuser1@example.com",
-            gender = "Other",
-            country = "Nowhere",
-            metrics = UserMetrics(totalMinutesSpent = 120, totalEntriesLogged = 5)
-        ),
-        UserModel(
-            id = "",
-            name = "testUser2",
-            age = 25,
-            email = "testuser2@example.com",
-            gender = "Other",
-            country = "Nowhere",
-            metrics = UserMetrics(totalMinutesSpent = 300, totalEntriesLogged = 8)
-        ),
-        UserModel(
-            id = "",
-            name = "testUser3",
-            age = 30,
-            email = "testuser3@example.com",
-            gender = "Other",
-            country = "Nowhere",
-            metrics = UserMetrics(totalMinutesSpent = 45, totalEntriesLogged = 2)
-        ),
-        UserModel(
-            id = "",
-            name = "testUser4",
-            age = 22,
-            email = "testuser4@example.com",
-            gender = "Other",
-            country = "Nowhere",
-            metrics = UserMetrics(totalMinutesSpent = 500, totalEntriesLogged = 12)
-        )
-    )
-
-    testUsers.forEach { user ->
-        userRepository.addUser(user)
-    }
-
-}
-
-
 
 @Composable
 fun compactUserHeader(
