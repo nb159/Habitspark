@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AlertDialogDefaults.titleContentColor
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -122,7 +121,6 @@ fun addEntryDialog(
                 }
 
                 val selectedDifficultyLevel = selectedDifficulty
-//                Text("Difficulty (${selectedDifficulty.label}", color = SecondaryText)
                 Text(
                     text = buildAnnotatedString {
                         append("Difficulty")

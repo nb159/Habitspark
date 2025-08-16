@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -33,6 +34,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarData
@@ -164,6 +166,13 @@ class MainActivity : ComponentActivity() {
 
                     val navController = rememberNavController()
                     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+                    val config = LocalConfiguration.current
+                    val screenWidth = config.screenWidthDp.dp
+                    // Phone: ~70% of screen; Tablets: cap at 360dp (Material-ish)
+                    val drawerWidth = remember(screenWidth) {
+                        minOf(screenWidth * 0.70f, 360.dp)
+                    }
+                    Log.d("MainActivity", "Drawer width: $drawerWidth")
                     val scope = rememberCoroutineScope()
                     val currentBackStackEntry by navController.currentBackStackEntryAsState()
 
@@ -178,15 +187,24 @@ class MainActivity : ComponentActivity() {
 
                     ModalNavigationDrawer(
                         drawerContent = {
-                            DrawerContent(
-                                onDestinationClicked = { route ->
-                                    scope.launch {
-                                        drawerState.close()
-                                        navController.navigate(route)
-                                    }},
-                                currentRoute = currentBackStackEntry?.destination?.route,
-                                user = user!!, // Ensure user is not null here
-                            )
+                            ModalDrawerSheet(
+                                drawerContainerColor = BackgroundColor,
+                                drawerShape = RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp),
+                                modifier = Modifier
+                                    .requiredWidth(drawerWidth)
+                                    .fillMaxHeight()
+                            ) {
+                                DrawerContent(
+                                    onDestinationClicked = { route ->
+                                        scope.launch {
+                                            drawerState.close()
+                                            navController.navigate(route)
+                                        }
+                                    },
+                                    currentRoute = currentBackStackEntry?.destination?.route,
+                                    user = user!!, // Ensure user is not null here
+                                )
+                            }
                         },
                         drawerState = drawerState,
                         scrimColor = Color.Black.copy(alpha = 0.6f),
@@ -274,71 +292,62 @@ fun DrawerContent(
     currentRoute: String? = null,
     user: UserModel,
 ) {
-    val drawerWidth = LocalConfiguration.current.screenWidthDp.dp * 0.70f
-
     //TODO uncomment for prod
 //    val unlockAtMs = (user.createdDate?.toDate()?.time ?: 0L) + 36L * 60L * 60L * 1000L
     val unlockAtMs = (user.createdDate?.toDate()?.time ?: 0L) + TimeUnit.MINUTES.toMillis(5)
 
-
-    Surface(
+    Column(
         modifier = Modifier
-            .fillMaxHeight()
-            .width(drawerWidth),
-        color = BackgroundColor
+            .fillMaxSize()
+            .padding(horizontal = 20.dp, vertical = 24.dp)
     ) {
-        Column(
+        Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 24.dp)
+                .fillMaxWidth()
+                .padding(vertical = 15.dp),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 15.dp),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.habitsparkicon),
-                    contentDescription = "HabitSpark logo",
-                    modifier = Modifier.size(50.dp),
-                    contentScale = ContentScale.Fit
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = "HabitSpark",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontFamily = FontFamily.Cursive,
-                        fontWeight = FontWeight.Bold,
-                        fontStyle = FontStyle.Italic
-                    ),
-                    color = PrimaryText
-                )
-            }
-            Divider(
-                color = Color.LightGray,
-                thickness = 1.dp,
-                modifier = Modifier.padding(bottom = 75.dp)
+            Image(
+                painter = painterResource(id = R.drawable.habitsparkicon),
+                contentDescription = "HabitSpark logo",
+                modifier = Modifier.size(50.dp),
+                contentScale = ContentScale.Fit
             )
-
-            DrawerItem("Profile", Screen.Profile.route, currentRoute, onDestinationClicked)
-            DrawerItem("Habits", Screen.Habits.route, currentRoute, onDestinationClicked)
-            DrawerItem("Achievements", Screen.Achievements.route, currentRoute, onDestinationClicked)
-            // 🔒 Survey: locked until duartionToOpenSurvey == 0
-            if (!user.surveyCompleted) {
-                DrawerItem(
-                    label = "Survey",
-                    route = Screen.Survey.route,
-                    currentRoute = currentRoute,
-                    onClick = onDestinationClicked,
-                    unlockAtMs = unlockAtMs
-                )
-            }
-            Spacer(modifier = Modifier.weight(1f))
-
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = "HabitSpark",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontFamily = FontFamily.Cursive,
+                    fontWeight = FontWeight.Bold,
+                    fontStyle = FontStyle.Italic
+                ),
+                color = PrimaryText
+            )
         }
+        Divider(
+            color = Color.LightGray,
+            thickness = 1.dp,
+            modifier = Modifier.padding(bottom = 75.dp)
+        )
+
+        DrawerItem("Profile", Screen.Profile.route, currentRoute, onDestinationClicked)
+        DrawerItem("Habits", Screen.Habits.route, currentRoute, onDestinationClicked)
+        DrawerItem("Achievements", Screen.Achievements.route, currentRoute, onDestinationClicked)
+        // 🔒 Survey: locked until duartionToOpenSurvey == 0
+        if (!user.surveyCompleted) {
+            DrawerItem(
+                label = "Survey",
+                route = Screen.Survey.route,
+                currentRoute = currentRoute,
+                onClick = onDestinationClicked,
+                unlockAtMs = unlockAtMs
+            )
+        }
+        Spacer(modifier = Modifier.weight(1f))
+
     }
+
 }
 @Composable
 fun DrawerItem(
