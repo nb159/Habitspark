@@ -7,6 +7,8 @@ import com.example.habitspark.data.models.AchievementModel
 import com.example.habitspark.data.models.UserMetrics
 import com.example.habitspark.data.models.UserModel
 import com.example.habitspark.data.repository.AchievementRepository
+import com.example.habitspark.domain.featureGate.Feature
+import com.example.habitspark.domain.featureGate.canAccess
 import com.example.habitspark.ui.events.StatsEvent
 import com.example.habitspark.ui.events.StatsEventBus
 import com.google.firebase.Firebase
@@ -21,7 +23,6 @@ suspend fun achievementStatsManager(
     scope: AchievementScope,
     firestore: FirebaseFirestore = Firebase.firestore,
 ) {
-
     val allAchievements = AchievementRepository.fetchAchievements()
     val typesToCheck = when (scope) {
         AchievementScope.ON_ENTRY -> setOf(
@@ -35,12 +36,14 @@ suspend fun achievementStatsManager(
             AchievementType.HABIT_COUNT,
         )
     }
+    var userFromTransaction: UserModel? = null
 
     //gets a firestore pointer to that doc -> attaching get() update() etc to it
     val userRef = firestore.collection("users").document(userId)
 
     val unlockedNow = firestore.runTransaction { tx ->
         val user = tx.get(userRef).toObject(UserModel::class.java) ?: return@runTransaction null
+        userFromTransaction = user
         val metrics = user.metrics
         val unlockedAchievements = user.achievements.keys
 
@@ -49,7 +52,6 @@ suspend fun achievementStatsManager(
         val newlyCompleted = toEvaluate.filter { achievement ->
             isAchievementCompleted(achievement, metrics)
         }
-
 
         val now = Timestamp.now()
         val gainedXp = newlyCompleted.filter { it.rewardType == RewardType.XP }.sumOf { it.reward }
@@ -68,15 +70,19 @@ suspend fun achievementStatsManager(
         newlyCompleted
     }.await()
 
-    if (!unlockedNow.isNullOrEmpty()) {
-        unlockedNow.forEach { a ->
-            val rewardMessage = when (a.rewardType) {
-                RewardType.XP    -> "${a.reward} XP"
-                RewardType.COINS -> "${a.reward} coins"
+    userFromTransaction?.let {
+            if (canAccess(it, Feature.ACHIEVEMENTS)) {
+                if (!unlockedNow.isNullOrEmpty()) {
+                    unlockedNow.forEach { a ->
+                        val rewardMessage = when (a.rewardType) {
+                            RewardType.XP    -> "${a.reward} XP"
+                            RewardType.COINS -> "${a.reward} coins"
+                        }
+                        StatsEventBus.emit(StatsEvent.AchievementUnlocked("🎉 New Achievement: ${a.title} • $rewardMessage"))
+                    }
+                    StatsEventBus.emit(StatsEvent.UserDataChanged)
+                }
             }
-            StatsEventBus.emit(StatsEvent.AchievementUnlocked("🎉 New Achievement: ${a.title} • $rewardMessage"))
-        }
-        StatsEventBus.emit(StatsEvent.UserDataChanged)
     }
 }
 

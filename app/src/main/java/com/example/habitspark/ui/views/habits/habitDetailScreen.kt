@@ -272,7 +272,7 @@ fun habitHeader(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     textIconValue(iconRes = R.drawable.clock, tint = Color.White, value = "${minutesToHoursMinutes(habit.totalMinutes)} hrs")
-                    textIconValue(iconRes = R.drawable.streak, value = "${habit.currentStreak} day(s)")
+                    textIconValue(iconRes = R.drawable.streak, value = "${habit.currentStreak} Day(s)")
                 }
             }
         }

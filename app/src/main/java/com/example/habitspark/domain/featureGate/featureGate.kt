@@ -54,6 +54,7 @@ val TYPE_RULES: Map<PlayerType, Set<Feature>> = mapOf(
         Feature.LEADERBOARD
     ),
     PlayerType.DISRUPTOR to setOf(),
+    PlayerType.UNKNOWN to setOf(),
 )
 
 fun effectiveFeatures(user: UserModel): Set<Feature> {
@@ -62,12 +63,18 @@ fun effectiveFeatures(user: UserModel): Set<Feature> {
         return enumValues<Feature>().toSet() // all extras
     }
 
-    val primary   = PlayerType.fromNameOrNull(user.primaryType)   ?: PlayerType.UNKNOWN
-//    val secondary = PlayerType.fromNameOrNull(user.secondaryType) ?: PlayerType.UNKNOWN
+    var primary   = PlayerType.fromNameOrNull(user.primaryType)   ?: PlayerType.UNKNOWN
+    val secondary = PlayerType.fromNameOrNull(user.secondaryType) ?: PlayerType.UNKNOWN
+
+    // If primary is DISRUPTOR (or UNKNOWN), use secondary; otherwise use primary
+    val effectiveType = when (primary) {
+        PlayerType.DISRUPTOR, PlayerType.UNKNOWN -> secondary
+        else -> primary
+    }
 
 
     //return TYPE_RULES[primary].orEmpty() union TYPE_RULES[secondary].orEmpty()
-    return TYPE_RULES[primary].orEmpty()
+    return TYPE_RULES[effectiveType].orEmpty()
 
 }
 

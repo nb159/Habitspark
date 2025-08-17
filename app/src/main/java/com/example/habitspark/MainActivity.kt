@@ -70,6 +70,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.habitspark.data.models.UserModel
 import com.example.habitspark.data.repository.UserPreferencesManager
+import com.example.habitspark.domain.featureGate.Feature
+import com.example.habitspark.domain.featureGate.FeatureGate
 import com.example.habitspark.ui.events.HasMessage
 import com.example.habitspark.ui.events.StatsEventBus
 import com.example.habitspark.ui.theme.BackgroundColor
@@ -285,7 +287,10 @@ fun DrawerContent(
 
         DrawerItem("Profile", Screen.Profile.route, currentRoute, onDestinationClicked)
         DrawerItem("Habits", Screen.Habits.route, currentRoute, onDestinationClicked)
-        DrawerItem("Achievements", Screen.Achievements.route, currentRoute, onDestinationClicked)
+        FeatureGate(user, Feature.ACHIEVEMENTS) {
+            DrawerItem("Achievements", Screen.Achievements.route, currentRoute, onDestinationClicked)
+        }
+
         // 🔒 Survey: locked until duartionToOpenSurvey == 0
         if (!user.surveyCompleted) {
             DrawerItem(

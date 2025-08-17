@@ -78,8 +78,6 @@ class QuestionnaireActivity : ComponentActivity() {
                     )
 
                     3 -> {
-
-
                         playerTypeQuestionnaireScreen(
                             onBoadingStep = onboardingStep,
                             toalOnBoadingSteps = 3,
