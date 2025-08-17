@@ -54,6 +54,7 @@ object StatsCalculator {
 
     fun updateAverageDouble(oldAverage: Double, sample: Double, oldCount: Int, op: ActionOperation): Double {
         if (sample == 0.0) return oldAverage // Avoid division by zero
+        if (oldAverage <= 0) return sample // If no previous count, return the sample as the new average
         return when (op) {
             ActionOperation.ADD -> ((oldAverage * oldCount) + sample) / (oldCount + 1).toDouble()
             ActionOperation.DELETE -> if (oldCount <= 1) 0.0 else ((oldAverage * oldCount) - sample) / (oldCount - 1).toDouble()
@@ -61,6 +62,7 @@ object StatsCalculator {
     }
     fun updateAverageFloat(oldAverage: Float, sample: Float, oldCount: Int, op: ActionOperation): Float {
         if (sample == 0f) return oldAverage // Avoid division by zero
+        if (oldAverage <= 0) return sample // If no previous count, return the sample as the new average
         return when (op) {
             ActionOperation.ADD -> (((oldAverage * oldCount) + sample) / (oldCount + 1).toFloat())
             ActionOperation.DELETE -> if (oldCount <= 1) 0f else (((oldAverage * oldCount) - sample) / (oldCount - 1).toFloat())
