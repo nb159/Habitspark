@@ -9,6 +9,7 @@ import com.example.habitspark.data.models.HabitModel
 import com.example.habitspark.data.models.UserMetrics
 import com.example.habitspark.data.models.UserModel
 import com.example.habitspark.data.repository.EntryRepository
+import com.example.habitspark.data.repository.HabitRepository
 import com.example.habitspark.data.repository.UserRepository
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
@@ -45,11 +46,13 @@ suspend fun onHabitAction(
 suspend fun recomputeUserMetrics(
     userId: String,
     entryRepository: EntryRepository = EntryRepository(Firebase.firestore),
+    habitRepository: HabitRepository = HabitRepository(Firebase.firestore),
     userRepository: UserRepository = UserRepository(Firebase.firestore),
 ) {
     val allUserEntries = entryRepository.getEntriesByUserId(userId).await()
+    val allUserHabits = habitRepository.getUserHabits(userId).await()
 
-    if (allUserEntries.isEmpty()) {
+    if (allUserEntries.isEmpty() && allUserHabits.isEmpty()) {
         // If no entries, reset metrics to default values
         userRepository.updateUserMetrics(
             userId = userId,
